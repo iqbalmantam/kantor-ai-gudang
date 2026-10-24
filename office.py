@@ -27,7 +27,8 @@ def keadaan() -> dict:
                 break
         pesan = ""
         if pilihan:
-            mine = [m for m in core.pesan_kartu(pilihan["id"]) if m["pengirim"] == a["nama"]]
+            pengirim = "sistem" if pilihan["status"] == "error" else a["nama"]
+            mine = [m for m in core.pesan_kartu(pilihan["id"]) if m["pengirim"] == pengirim]
             if mine:
                 pesan = mine[-1]["teks"]
         agents.append(
@@ -220,7 +221,7 @@ function tag(text, cx, y, bg) {
 }
 function bubble(text, cx, bottom, color) {
   ctx.font = '10px sans-serif';
-  const lines = wrap(text, 26, 3);
+  const lines = wrap(text, 30, 4);
   let w = 0; lines.forEach(function (l) { w = Math.max(w, ctx.measureText(l).width); });
   w += 12; const h = lines.length * 12 + 8;
   let x = Math.min(Math.max(cx - w / 2, 4), W - w - 4); const y = bottom - h;
@@ -232,7 +233,7 @@ function bubble(text, cx, bottom, color) {
 }
 function bubbleFor(c) {
   if (c.status === 'nunggu_lu') return { text: '🙋 ' + (c.pesan || c.judul), color: '#e67e22' };
-  if (c.status === 'error') return { text: '⚠️ Gagal memanggil AI. Cek API key / kuota Groq.', color: '#e74c3c' };
+  if (c.status === 'error') return { text: '⚠️ ' + (c.pesan || 'Gagal memanggil AI. Cek API key / kuota Groq.'), color: '#e74c3c' };
   if (working(c)) return { text: '⚙️ ' + c.kode + ': ' + c.judul, color: '#3498db' };
   return null;
 }
