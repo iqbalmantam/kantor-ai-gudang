@@ -11,20 +11,23 @@ from groq import Groq
 MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 AGENTS = {
-    "inbound": {
-        "nama": "Dewi",
-        "peran": "Inbound",
-        "tugas": "Penerimaan barang, cek dokumen PO/DO, jadwal bongkar, putaway ke rak.",
+    "hrd": {
+        "nama": "Regita",
+        "peran": "HRD",
+        "gender": "wanita",
+        "tugas": "Absensi, kebutuhan manpower, cuti/lembur, rekrutmen, kedisiplinan, pembinaan karyawan.",
     },
-    "inventory": {
-        "nama": "Rizky",
-        "peran": "Inventory",
-        "tugas": "Akurasi stok, selisih stock opname, lokasi rak, replenishment.",
+    "manager_ops": {
+        "nama": "Tris",
+        "peran": "Manager Operation",
+        "gender": "pria",
+        "tugas": "Memimpin operasional gudang, memutuskan prioritas, menyetujui eskalasi, target dan KPI.",
     },
-    "audit": {
-        "nama": "Bayu",
-        "peran": "Audit Racking",
-        "tugas": "Inspeksi kondisi rak (penyok, miring, baut kendor), temuan keselamatan, tindak lanjut PIC.",
+    "op_control": {
+        "nama": "Yogi",
+        "peran": "Operation Control",
+        "gender": "pria",
+        "tugas": "Memantau jalannya operasional harian, produktivitas, antrean kerja, dan temuan lapangan.",
     },
 }
 
@@ -52,7 +55,7 @@ def system_prompt(kunci: str) -> str:
     a = AGENTS[kunci]
     lain = ", ".join(f'"{k}"' for k in AGENTS if k != kunci)
     return (
-        f"Namamu {a['nama']}, agent {a['peran']}. Wewenangmu: {a['tugas']}\n"
+        f"Namamu {a['nama']}, agent {a['peran']} (gender {a['gender']}). Wewenangmu: {a['tugas']}\n"
         + ATURAN_UMUM % lain
     )
 
