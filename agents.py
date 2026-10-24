@@ -8,7 +8,15 @@ import os
 
 from groq import Groq
 
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Urutan model yang dicoba. GROQ_MODEL (opsional, di Secrets) dicoba paling dulu.
+MODELS = [m for m in [
+    os.getenv("GROQ_MODEL"),
+    "llama-3.3-70b-versatile",
+    "openai/gpt-oss-120b",
+    "llama-3.1-8b-instant",
+    "openai/gpt-oss-20b",
+] if m]
+_model_ok = None  # model yang terakhir berhasil, supaya tidak mencoba ulang yang 404
 
 AGENTS = {
     "hrd": {
@@ -67,6 +75,36 @@ def _klien():
     return Groq(api_key=kunci_api)
 
 
+def _panggil(pesan: list[dict]):
+    """Coba model satu per satu; lewati yang 404 / tidak bisa diakses."""
+    global _model_ok
+    klien = _klien()
+    urutan = ([_model_ok] if _model_ok else []) + [m for m in MODELS if m != _model_ok]
+    galat = None
+    for model in urutan:
+        opsi = {}
+        if model.startswith("openai/gpt-oss"):
+            opsi["reasoning_effort"] = "low"
+        try:
+            resp = klien.chat.completions.create(
+                model=model,
+                messages=pesan,
+                temperature=0.3,
+                max_tokens=1000,
+                response_format={"type": "json_object"},
+                **opsi,
+            )
+            _model_ok = model
+            return resp
+        except Exception as e:
+            galat = e
+            teks = str(e)
+            if "model_not_found" in teks or "does not exist" in teks or "decommissioned" in teks:
+                continue
+            raise
+    raise RuntimeError(f"Tidak ada model Groq yang bisa diakses ({', '.join(urutan)}). Terakhir: {galat}")
+
+
 def jalankan_agent(kunci: str, judul: str, deskripsi: str, riwayat: list[dict]) -> dict:
     """Panggil LLM untuk satu giliran kerja. Return dict ter-validasi."""
     pesan = [{"role": "system", "content": system_prompt(kunci)}]
@@ -77,13 +115,7 @@ def jalankan_agent(kunci: str, judul: str, deskripsi: str, riwayat: list[dict]) 
         # riwayat: {"pengirim": "...", "teks": "..."}
         pesan.append({"role": "user", "content": f"[{r['pengirim']}] {r['teks']}"})
 
-    resp = _klien().chat.completions.create(
-        model=MODEL,
-        messages=pesan,
-        temperature=0.3,
-        max_tokens=400,
-        response_format={"type": "json_object"},
-    )
+    resp = _panggil(pesan)
     mentah = resp.choices[0].message.content or "{}"
     try:
         data = json.loads(mentah)
