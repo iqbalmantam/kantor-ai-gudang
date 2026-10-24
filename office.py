@@ -3,7 +3,7 @@
 Keadaan agent diambil dari kartu di database (sama seperti versi isometrik):
 
 - jalan/antri -> agent duduk di meja dan mengetik
-- nunggu_lu   -> agent berjalan ke meja supervisor (kamu), berdiri, melambai
+- nunggu_lu   -> agent berjalan ke meja supervisor (Yogi), berdiri, melambai
 - error       -> agent menunggu di meja supervisor, tampak panik
 - tidak ada   -> agent jalan-jalan (pantry, lounge, kembali ke meja)
 
@@ -648,7 +648,7 @@ const chars = D.agents.map((a, i) => {
 });
 // hubungkan monitor ke pemiliknya
 { const keys = ['hrd', 'manager_ops', 'op_control']; keys.forEach((k, i) => { const sc = screens[i]; if (sc) sc.ch = chars.filter(c => c.kunci === k)[0] || null; }); }
-const kamu = { kunci: 'kamu', nama: 'Kamu', peran: 'Supervisor', status: 'idle', x: SUP_SEAT[0], y: SUP_SEAT[1], h: 0, hT: 0, sitting: true, walking: false, seed: 1.3, rig: makePerson(LOOK.kamu), q: newState(true) };
+const kamu = { kunci: 'kamu', nama: 'Yogi', peran: 'Supervisor', status: 'idle', x: SUP_SEAT[0], y: SUP_SEAT[1], h: 0, hT: 0, sitting: true, walking: false, seed: 1.3, rig: makePerson(LOOK.kamu), q: newState(true) };
 const sk = screens[3]; if (sk) sk.ch = null;
 const people = chars.concat([kamu]);
 
@@ -712,7 +712,7 @@ function bubbleFor(c) {
 people.forEach(c => {
   const el = document.createElement('div'); el.className = 'lb'; el.innerHTML = '<div class="bb"></div><div class="tg"></div>'; $lab.appendChild(el);
   c.el = el; c.bb = el.firstChild; c.tg = el.lastChild;
-  c.tg.textContent = c.kunci === 'kamu' ? 'Kamu (Supervisor)' : c.nama + ' · ' + c.peran;
+  c.tg.textContent = c.kunci === 'kamu' ? 'Yogi (Supervisor)' : c.nama + ' · ' + c.peran;
   const b = c.kunci === 'kamu' ? null : bubbleFor(c);
   if (b) { c.bb.textContent = b.text.length > 150 ? b.text.slice(0, 148) + '…' : b.text; c.bb.style.borderColor = b.color; } else c.bb.style.display = 'none';
   c.tg.addEventListener('click', () => focus(c));
