@@ -4,6 +4,7 @@ import os
 import streamlit as st
 
 import core
+import office
 from agents import AGENTS
 
 st.set_page_config(page_title="Kantor AI Gudang", page_icon="🏭", layout="wide")
@@ -60,7 +61,16 @@ with st.sidebar:
 
 kartu_semua = core.daftar_kartu()
 
-tab_papan, tab_chat = st.tabs(["📋 Papan kartu", "💬 Chat kantor"])
+tab_kantor, tab_papan, tab_chat = st.tabs(["🏢 Kantor", "📋 Papan kartu", "💬 Chat kantor"])
+
+# ---------- Simulasi kantor ----------
+with tab_kantor:
+    @st.fragment(run_every=5)
+    def _kantor():
+        office.tampilkan()
+
+    _kantor()
+    st.caption("Agent duduk di meja saat bekerja, ke meja supervisor saat butuh jawabanmu, dan jalan-jalan saat senggang.")
 
 # ---------- Papan kartu ----------
 with tab_papan:
