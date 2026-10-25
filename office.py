@@ -98,7 +98,7 @@ canvas{display:block;outline:none}
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v9 pintu geser</span></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v10 tanpa daun pintu</span></div>
 <div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
 <div id="err"></div></div>
 <script>setTimeout(function(){if(!window.__ok){var e=document.getElementById('err');e.style.display='flex';e.textContent='Gagal memuat Three.js dari CDN (jsdelivr). Pastikan koneksi internet aktif lalu muat ulang halaman.';}},9000);</script>
@@ -394,7 +394,6 @@ function part(x0, z0, x1, z1, doors, o) {
     }
     if (alongX) ob(s[0], fx - 0.06, s[1], fx + 0.06); else ob(fx - 0.06, s[0], fx + 0.06, s[1]);
   });
-  ds.forEach(d => DOORS.push(makeDoor(alongX, fx, d[0], d[1])));
   ds.forEach(d => { put(d[0], d[1], 2.2, 2.66, PM, 0.1, true); put(d[0] - 0.03, d[0] + 0.03, 0, 2.2, STEEL, 0.11, true); put(d[1] - 0.03, d[1] + 0.03, 0, 2.2, STEEL, 0.11, true); });
 }
 part(0, 8, NX, 8, [[4.0, 5.3], [12.0, 13.3], [20.8, 22.1]]);
