@@ -69,7 +69,7 @@ def html_kantor() -> str:
     return HTML.replace("__DATA__", data)
 
 
-def tampilkan(height: int = 620):
+def tampilkan(height: int = 700):
     components.html(html_kantor(), height=height)
 
 
@@ -81,12 +81,12 @@ html,body{margin:0;height:100%;background:#0e1117;overflow:hidden;font-family:sy
 #v{position:absolute;inset:0}
 canvas{display:block;outline:none}
 #lab{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.lb{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:5px;will-change:transform;white-space:nowrap}
+.lb{z-index:4;position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:5px;will-change:transform;white-space:nowrap}
 .tg{pointer-events:auto;cursor:pointer;background:rgba(15,17,23,.82);color:#fff;font:600 11px system-ui,sans-serif;padding:3px 9px;border-radius:7px;backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12)}
 .tg:hover{background:rgba(40,46,60,.95)}
 .bb{position:relative;max-width:230px;white-space:normal;background:#fff;color:#1b1f27;font:12px/1.35 system-ui,sans-serif;padding:6px 9px;border-radius:9px;border:2px solid #3498db;box-shadow:0 4px 14px rgba(0,0,0,.35);text-align:left}
 .bb:after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-5px;border:5px solid transparent;border-top-color:inherit}
-.rl{position:absolute;left:0;top:0;will-change:transform;font:700 9px system-ui,sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.8);background:rgba(15,17,23,.5);padding:2px 7px;border-radius:5px;white-space:nowrap}
+.rl{z-index:1;position:absolute;left:0;top:0;will-change:transform;font:700 9px system-ui,sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.8);background:rgba(15,17,23,.5);padding:2px 7px;border-radius:5px;white-space:nowrap}
 .ttl{position:absolute;left:14px;top:10px;color:#e8e2d6;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
 .ttl b{display:block;font-size:13px}.ttl span{font-size:11px;color:#9aa3b2}
 .hud{position:absolute;right:10px;top:10px;display:flex;gap:6px;align-items:center}
@@ -132,11 +132,13 @@ $v.appendChild(renderer.domElement);
 const ANI = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0e1117);
+const HORIZON = new THREE.Color('#d3e4f1');
+scene.background = HORIZON;
+scene.fog = new THREE.Fog(HORIZON, 55, 250);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 
-const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 170);
-const HOME = { p: new THREE.Vector3(36, 26, 40), t: new THREE.Vector3(13, 0.8, 10) };
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 520);
+const HOME = { p: new THREE.Vector3(33, 24, 37.5), t: new THREE.Vector3(13, 0.6, 11) };
 camera.position.copy(HOME.p);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.t);
@@ -201,6 +203,27 @@ function ao(cx, cz, w, d, o) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), o ? AOM.clone() : AOM);
   if (o) m.material.opacity = o;
   m.rotation.x = -Math.PI / 2; m.position.set(cx, 0.012, cz); m.renderOrder = 1; S.add(m); return m;
+}
+
+// =====================================================================
+// Langit: kubah gradien + awan lembut
+// =====================================================================
+{
+  const skyDome = paint(1024, 512, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#2f78d0'); gr.addColorStop(0.3, '#5fa3e6'); gr.addColorStop(0.44, '#a8d0f0'); gr.addColorStop(0.5, '#d3e4f1'); gr.addColorStop(1, '#d3e4f1');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 30; i++) {
+      const cx = rnd() * w, cy = 60 + rnd() * 140, sc = 0.7 + rnd() * 1.2;
+      for (let k = 0; k < 10; k++) {
+        const x = cx + (k - 4.5) * 17 * sc, y = cy + (rnd() - 0.5) * 12 * sc, r = (18 + rnd() * 24) * sc;
+        const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, 'rgba(255,255,255,.62)'); rg.addColorStop(0.6, 'rgba(255,255,255,.22)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = rg; g.beginPath(); g.ellipse(x, y, r * 1.5, r * 0.62, 0, 0, 6.3); g.fill();
+      }
+    }
+  });
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(400, 40, 20), new THREE.MeshBasicMaterial({ map: skyDome, side: THREE.BackSide, fog: false, toneMapped: false, depthWrite: false }));
+  dome.renderOrder = -10; scene.add(dome);
 }
 
 // =====================================================================
@@ -339,16 +362,18 @@ part(7, 10, 7, 16, [[12.8, 14.1]]); part(14, 10, 14, 16, [[12.5, 13.8]]);
 part(20, 10, 20, 16, [[11.2, 12.5], [14.0, 15.3]]); part(20, 13, NX, 13, []);
 
 // pemandangan di luar jendela
-const skyT = paint(512, 256, (g, w, h) => {
-  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5aa0e6'); gr.addColorStop(0.65, '#bfe0f7'); gr.addColorStop(1, '#e9f3f0');
-  g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(255,255,255,.75)';
-  for (let i = 0; i < 9; i++) { const x = rnd() * w, y = 20 + rnd() * 70; for (let k = 0; k < 5; k++) { g.beginPath(); g.ellipse(x + k * 14, y + rnd() * 6, 22 + rnd() * 14, 8 + rnd() * 5, 0, 0, 6.3); g.fill(); } }
-  g.fillStyle = '#93a7b8'; for (let x = 0; x < w; x += 50 + rnd() * 60) { const bw = 46 + rnd() * 80, bh = 18 + rnd() * 40; g.fillRect(x, h * 0.74 - bh, bw, bh + h); }
-  g.fillStyle = '#7d9577'; g.fillRect(0, h * 0.8, w, h);
-});
-const SKYM = new THREE.MeshBasicMaterial({ map: skyT, toneMapped: false });
-const sk1 = new THREE.Mesh(new THREE.PlaneGeometry(80, 16), SKYM); sk1.position.set(13, 4.5, -8); S.add(sk1);
-const sk2 = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), SKYM); sk2.rotation.y = Math.PI / 2; sk2.position.set(-8, 4.5, 8); S.add(sk2);
+// kota di kejauhan (kotak 3D berkabut) untuk pemandangan dari jendela
+{
+  const winT = paint(128, 256, (g, w, h) => { g.fillStyle = '#b4c5d6'; g.fillRect(0, 0, w, h); for (let y = 8; y < h; y += 16) for (let x = 6; x < w; x += 14) { g.fillStyle = rnd() < 0.25 ? '#eef5fb' : '#8ea5bb'; g.fillRect(x, y, 8, 9); } }, true, [1, 1]);
+  const cols = ['#b6c6d6', '#a9bccd', '#c3cfdb'];
+  const bld = (x, z, w, d, h, i) => {
+    const tx = winT.clone(); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(Math.max(1, Math.round(w / 6)), Math.max(1, Math.round(h / 10))); tx.needsUpdate = true;
+    add(S, BX(w, h, d), new THREE.MeshStandardMaterial({ color: cols[i % 3], map: tx, roughness: 0.9 }), x, h / 2 - 0.12, z, { nocast: true, norecv: true });
+  };
+  let bi = 0;
+  for (let x = -110; x < 150; x += 16 + rnd() * 12) bld(x, -95 - rnd() * 45, 10 + rnd() * 10, 10 + rnd() * 8, 12 + rnd() * 34, bi++);
+  for (let z = -90; z < 130; z += 16 + rnd() * 12) bld(-95 - rnd() * 45, z, 10 + rnd() * 8, 10 + rnd() * 10, 12 + rnd() * 34, bi++);
+}
 
 // =====================================================================
 // Layar (kanvas hidup), monitor, meja, kursi
@@ -698,6 +723,46 @@ function car(x, z, col, ry) {
     [[0, 2.0, 0, 0.9], [0.4, 2.5, 0.2, 0.7], [-0.35, 2.4, -0.2, 0.65]].forEach(f => add(S, new THREE.SphereGeometry(f[3], 14, 10), M('#2e6b3a', { roughness: 0.8, bumpMap: FAB, bumpScale: 1 }), p[0] + f[0], f[1], p[1] + f[2]));
   });
 }
+// =====================================================================
+// LINGKUNGAN LUAR: halaman rumput, trotoar, jalan, pohon, lampu jalan
+// =====================================================================
+{
+  const grassT = paint(512, 512, (g, w, h) => {
+    g.fillStyle = '#5c8f4a'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 90; i++) { g.fillStyle = 'hsla(' + (92 + rnd() * 26) + ',' + (32 + rnd() * 20) + '%,' + (30 + rnd() * 16) + '%,' + (0.12 + rnd() * 0.14) + ')'; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 14 + rnd() * 46, 8 + rnd() * 26, rnd() * 3, 0, 6.3); g.fill(); }
+    for (let i = 0; i < 9000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(20,50,15,.22)' : 'rgba(150,200,90,.2)'; g.fillRect(rnd() * w, rnd() * h, 1.5, 2.5); }
+  }, true, [1, 1]);
+  const walkT = paint(256, 256, (g, w, h) => { g.fillStyle = '#c9c6bd'; g.fillRect(0, 0, w, h); speck(g, w, h, 5000, 0.06); grid(g, w, h, 2, 'rgba(60,58,52,.38)', 2); }, true, [1, 1]);
+  const roadT = paint(256, 256, (g, w, h) => { g.fillStyle = '#2f3237'; g.fillRect(0, 0, w, h); speck(g, w, h, 9000, 0.08); }, true, [1, 1]);
+  const flat = (x0, z0, x1, z1, mat, tile, y) => {
+    const w = x1 - x0, d = z1 - z0, g = new THREE.PlaneGeometry(w, d), uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / tile, uv.getY(i) * d / tile);
+    const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); m.receiveShadow = true; S.add(m);
+  };
+  flat(-390, -390, 410, 410, M('#ffffff', { map: grassT, roughness: 1, bumpMap: BN, bumpScale: 0.5 }), 8, -0.12);
+  flat(-14, 21.4, 40, 23.6, M('#ffffff', { map: walkT, roughness: 0.85 }), 2, -0.105);
+  flat(-80, 26.2, 110, 34, M('#ffffff', { map: roadT, roughness: 0.95 }), 4, -0.105);
+  const paintM = M('#e9e3c0', { roughness: 0.7 });
+  for (let x = -76; x < 108; x += 4.5) { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.16), paintM); m.rotation.x = -Math.PI / 2; m.position.set(x, -0.1, 30.1); S.add(m); }
+  [26.6, 33.6].forEach(z => { const m = new THREE.Mesh(new THREE.PlaneGeometry(190, 0.12), M('#e8e8e0', { roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.position.set(15, -0.1, z); S.add(m); });
+  add(S, BX(28.4, 0.12, 0.16), M('#b9b6ae', { roughness: 0.8 }), 13, -0.05, 21.48);
+  add(S, RB(52, 0.74, 0.6, 0.06), M('#2f6b35', { roughness: 0.92, bumpMap: FAB, bumpScale: 1.6 }), 13, 0.25, 24.3, {});
+  const TR = M('#6b4a2f', { roughness: 0.9, bumpMap: FAB, bumpScale: 1 });
+  const LEAF = ['#2e6b3a', '#3b7d3f', '#2a5e34'].map(c => M(c, { roughness: 0.85, bumpMap: FAB, bumpScale: 1.2 }));
+  const tree = (x, z, sc, k) => {
+    const g = new THREE.Group(); g.position.set(x, -0.12, z); g.scale.setScalar(sc); S.add(g);
+    add(g, new THREE.CylinderGeometry(0.12, 0.2, 2.2, 10), TR, 0, 1.1, 0);
+    [[0, 2.9, 0, 1.25], [0.7, 2.5, 0.3, 0.95], [-0.65, 2.6, -0.25, 1.0], [0.1, 3.7, 0.1, 0.9], [-0.3, 3.3, 0.6, 0.8]].forEach((f, i) => add(g, new THREE.IcosahedronGeometry(f[3], 2), LEAF[(k + i) % 3], f[0], f[1], f[2]));
+  };
+  [[-3, -5, 1.0], [6, -7, 1.15], [16, -6, 0.95], [26, -7, 1.1], [35, -5, 1.0], [-6, 3, 1.05], [-8, 11, 1.2], [-6, 18, 1.0],
+   [31.5, 4, 1.1], [33.5, 12, 1.0], [32, 19, 1.15], [-6.5, 22.2, 0.95], [33, 22.4, 1.0], [44, 22.4, 1.1], [-18, 22.4, 1.05]].forEach((t, i) => tree(t[0], t[1], t[2], i));
+  const post = (x, z) => {
+    add(S, new THREE.CylinderGeometry(0.05, 0.07, 4.2, 10), STEEL, x, 1.98, z);
+    add(S, RB(0.95, 0.12, 0.3, 0.04), BLACK, x + 0.42, 4.1, z);
+    add(S, BX(0.7, 0.02, 0.22), new THREE.MeshStandardMaterial({ color: '#fff', emissive: '#fff2c9', emissiveIntensity: 1.6 }), x + 0.42, 4.03, z, { nocast: true });
+  };
+  [1, 13, 25, 37, -11].forEach(x => post(x, 22.5));
+}
 const ROOMS = [['RUANG KERJA', 5, 0.4, 2.7], ['RUANG SUPERVISOR', 12.5, 0.4, 2.7], ['RUANG RAPAT', 20.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['LOBBY', 3.5, 10.4, 2.7], ['PANTRY & LOUNGE', 10.5, 10.4, 2.7], ['KONTROL GUDANG', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7], ['ARSIP & GUDANG', 23, 13.4, 2.7], ['AREA PARKIR', 13, 16.6, 0.3]];
 
 // =====================================================================
@@ -739,10 +804,10 @@ function makePerson(look) {
   }
   if (look.tie) {
     const tg = new THREE.CylinderGeometry(0.014, 0.025, 0.24, 6); tg.scale(1, 1, 0.35);
-    mk(spine, tg, M(look.tie, { roughness: 0.4, sheen: 1 }), 0, 0.33, 0.094); mk(spine, sph(0.02, 1, 0.9, 0.7), M(look.tie, { roughness: 0.4 }), 0, 0.45, 0.092);
+    mk(spine, tg, P(look.tie, { roughness: 0.4, sheen: 1, sheenColor: new THREE.Color('#ffffff') }), 0, 0.33, 0.094); mk(spine, sph(0.02, 1, 0.9, 0.7), M(look.tie, { roughness: 0.4 }), 0, 0.45, 0.092);
   }
   mk(spine, new THREE.CylinderGeometry(0.05, 0.056, 0.12, 16), skin, 0, 0.5, 0);
-  { const col = new THREE.TorusGeometry(0.058, 0.013, 8, 20); col.rotateX(Math.PI / 2); mk(spine, col, shirt, 0, 0.465, 0); }
+  { const col = new THREE.TorusGeometry(0.058, look.tie ? 0.017 : 0.013, 8, 24); col.rotateX(Math.PI / 2); mk(spine, col, look.tie ? M('#f4f4f2', { roughness: 0.6 }) : shirt, 0, 0.465, 0); }
 
   const head = new THREE.Group(); head.position.set(0, 0.55, 0); spine.add(head);
   mk(head, sph(0.088, 1, 1.22, 1.1), skin, 0, 0.1, 0);
@@ -757,8 +822,8 @@ function makePerson(look) {
     if (look.glasses) mk(head, new THREE.TorusGeometry(0.021, 0.0022, 8, 20), BLACK, s * 0.034, 0.108, 0.095);
   });
   if (look.glasses) mk(head, BX(0.02, 0.003, 0.003), BLACK, 0, 0.112, 0.096);
-  const hc = new THREE.SphereGeometry(1, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.6); hc.scale(0.098, 0.12, 0.108);
-  mk(head, hc, hair, 0, 0.108, -0.006).rotation.x = -0.3;
+  const hc = new THREE.SphereGeometry(1, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.52); hc.scale(0.097, 0.118, 0.106);
+  mk(head, hc, hair, 0, 0.104, -0.006).rotation.x = -0.42;   // garis rambut di atas alis (mata terlihat)
   if (look.female) {
     mk(head, cap(0.095, 0.28, 1, 0.7), hair, 0, -0.04, -0.075);
     [-1, 1].forEach(s => mk(head, cap(0.026, 0.16, 1, 1), hair, s * 0.088, 0.06, -0.015));
@@ -787,7 +852,7 @@ function makePerson(look) {
     const kn = new THREE.Group(); kn.position.y = -0.47; hp.add(kn);
     mk(kn, sph(0.062, 1, 1, 1), pants); mk(kn, cap(0.058, 0.3, 1, 1), pants, 0, -0.22, 0);
     const an = new THREE.Group(); an.position.y = -0.43; kn.add(an);
-    const fg = new THREE.CapsuleGeometry(0.047, 0.1, 6, 12); fg.rotateX(Math.PI / 2); fg.scale(1, 0.75, 1); mk(an, fg, shoe, 0, -0.045, 0.05);
+    const fg = new THREE.CapsuleGeometry(0.047, 0.1, 6, 12); fg.rotateX(Math.PI / 2); fg.scale(1, 0.75, 1); mk(an, fg, shoe, 0, -0.045, 0.05); mk(an, new THREE.BoxGeometry(0.092, 0.012, 0.2), M('#e6e3dc', { roughness: 0.7 }), 0, -0.076, 0.052);
     legs[s] = { hp, kn, an };
   });
   scene.add(root);
@@ -948,10 +1013,11 @@ people.forEach(c => {
 const _v = new THREE.Vector3();
 const rls = ROOMS.map(r => { const el = document.createElement('div'); el.className = 'rl'; el.textContent = r[0]; $lab.appendChild(el); return { el, p: r }; });
 function labels(w, h) {
+  const ro = Math.max(0, Math.min(1, (camera.position.distanceTo(controls.target) - 14) / 14));
   rls.forEach(r => {
     _v.set(r.p[1], r.p[3], r.p[2]).project(camera);
     if (_v.z > 1 || _v.z < -1) { r.el.style.display = 'none'; return; }
-    r.el.style.display = 'block';
+    r.el.style.display = ro < 0.02 ? 'none' : 'block'; r.el.style.opacity = ro.toFixed(2);
     r.el.style.transform = 'translate(' + ((_v.x * 0.5 + 0.5) * w).toFixed(1) + 'px,' + ((-_v.y * 0.5 + 0.5) * h).toFixed(1) + 'px) translate(-50%,-50%)';
   });
   people.forEach(c => {

@@ -9,6 +9,24 @@ from agents import AGENTS
 
 st.set_page_config(page_title="Kantor AI Gudang", page_icon="🏭", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    /* Sembunyikan Share / bintang / edit / GitHub / menu titik tiga, dekorasi, footer, badge */
+    [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"],
+    [data-testid="stMainMenu"], [data-testid="stAppDeployButton"], [data-testid="manage-app-button"],
+    .stAppDeployButton, #MainMenu, footer, [class*="viewerBadge"], [class*="_profileContainer"]
+    {display: none !important; visibility: hidden !important;}
+    /* Header dibuat transparan & tanpa tinggi; tombol buka-sidebar tetap tampil */
+    header[data-testid="stHeader"] {background: transparent !important; height: 0 !important; min-height: 0 !important;}
+    [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"]
+    {display: flex !important; visibility: visible !important; z-index: 999990 !important;}
+    .block-container {padding-top: 1.2rem !important;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_resource
 def _siap():
