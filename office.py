@@ -98,7 +98,7 @@ canvas{display:block;outline:none}
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v10 tanpa daun pintu</span></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v11 grafis ringan</span></div>
 <div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
 <div id="err"></div></div>
 <script>setTimeout(function(){if(!window.__ok){var e=document.getElementById('err');e.style.display='flex';e.textContent='Gagal memuat Three.js dari CDN (jsdelivr). Pastikan koneksi internet aktif lalu muat ulang halaman.';}},9000);</script>
@@ -126,6 +126,8 @@ let pr = MAXPR;
 renderer.setPixelRatio(pr);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;   // bayangan di-update tiap 2 frame (hemat GPU)
+let shF = 0;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 $v.appendChild(renderer.domElement);
@@ -176,8 +178,14 @@ const NOISE = paint(256, 256, (g, w, h) => {
   g.putImageData(im, 0, 0);
 }, false, [1, 1]);
 function noise(rx, ry) { const t = NOISE.clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.needsUpdate = true; return t; }
-const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.7, metalness: 0 }, o || {}));
-const P = (c, o) => new THREE.MeshPhysicalMaterial(Object.assign({ color: c, roughness: 0.5, metalness: 0 }, o || {}));
+// material di-cache: warna/opsi sama = satu material (lebih sedikit state GPU, objek bisa digabung)
+const _MC = new Map();
+function mat(Cls, base, c, o) {
+  const opt = Object.assign({ color: c }, base, o || {}), key = Cls.name + JSON.stringify(opt, (k, v) => (v && v.isTexture ? 't' + v.uuid : v));
+  let m = _MC.get(key); if (!m) { m = new Cls(opt); _MC.set(key, m); } return m;
+}
+const M = (c, o) => mat(THREE.MeshStandardMaterial, { roughness: 0.7, metalness: 0 }, c, o);
+const P = (c, o) => mat(THREE.MeshPhysicalMaterial, { roughness: 0.5, metalness: 0 }, c, o);
 const FAB = noise(5, 5);
 const cloth = (c, r) => M(c, { roughness: r || 0.9, bumpMap: FAB, bumpScale: 0.7 });
 const BX = (w, h, d) => new THREE.BoxGeometry(w, h, d);
@@ -572,12 +580,19 @@ function cabinet(cx, cz, w, col) {
   add(S, RB(w, 0.9, 0.4, 0.015), M(col || '#cfc9bd', { roughness: 0.6 }), cx, 0.45, cz); ob(cx - w / 2, cz - 0.2, cx + w / 2, cz + 0.2);
   add(S, RB(w + 0.04, 0.04, 0.44, 0.01), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), cx, 0.92, cz);
 }
+const BOXT = paint(128, 128, (g, w, h) => {
+  g.fillStyle = '#efdcb6'; g.fillRect(0, 0, w, h); speck(g, w, h, 1800, 0.06);
+  for (let i = 0; i < 26; i++) { g.strokeStyle = 'rgba(120,85,40,' + (0.05 + rnd() * 0.07) + ')'; g.lineWidth = 1; g.beginPath(); const y = rnd() * h; g.moveTo(0, y); g.lineTo(w, y + rnd() * 3 - 1.5); g.stroke(); }
+  g.fillStyle = 'rgba(236,228,205,.95)'; g.fillRect(w / 2 - 9, 0, 18, h); g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(w / 2 - 9, 0, 1.5, h); g.fillRect(w / 2 + 7.5, 0, 1.5, h);
+  g.fillStyle = '#fbfbf8'; g.fillRect(14, 78, 40, 28); g.fillStyle = '#222'; for (let i = 0; i < 9; i++) g.fillRect(18 + i * 4, 82, 2 + (i % 3), 10); g.fillRect(18, 96, 30, 2); g.fillRect(18, 100, 22, 2);
+  g.strokeStyle = 'rgba(90,60,25,.35)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3);
+}, true, [1, 1]);
 function palletRack(x, z, L) {
   const g = new THREE.Group(); g.position.set(x, 0, z); S.add(g);
   const og = M('#e8751a', { roughness: 0.5, metalness: 0.4 }), bl = M('#1f5fa8', { roughness: 0.5, metalness: 0.4 }), slat = M('#a58a63', { roughness: 0.8 });
   const bays = Math.max(1, Math.round(L / 1.7)), bw = L / bays;
   for (let i = 0; i <= bays; i++) [0, 0.9].forEach(zz => add(g, BX(0.07, 2.6, 0.07), og, i * bw, 1.3, zz + 0.035));
-  const ys = [0.35, 1.2, 2.05], im = new THREE.InstancedMesh(BX(1, 1, 1), M('#ffffff', { roughness: 0.85 }), 80), o = new THREE.Object3D(); let n = 0;
+  const ys = [0.35, 1.2, 2.05], im = new THREE.InstancedMesh(BX(1, 1, 1), M('#ffffff', { map: BOXT, roughness: 0.85 }), 80), o = new THREE.Object3D(); let n = 0;
   for (let b = 0; b < bays; b++) ys.forEach(y => {
     [0.03, 0.87].forEach(zz => add(g, BX(bw, 0.1, 0.05), bl, b * bw + bw / 2, y, zz)); add(g, BX(bw - 0.1, 0.025, 0.8), slat, b * bw + bw / 2, y + 0.06, 0.45);
     for (let k = 0; k < 3 && n < 80; k++) { const w = 0.35 + rnd() * 0.15, h = 0.3 + rnd() * 0.25; o.position.set(b * bw + 0.3 + k * (bw - 0.5) / 3 + 0.1, y + 0.07 + h / 2, 0.45); o.scale.set(w, h, 0.5 + rnd() * 0.2); o.rotation.set(0, 0, 0); o.updateMatrix(); im.setMatrixAt(n, o.matrix); im.setColorAt(n, new THREE.Color('#b08a55').multiplyScalar(0.8 + rnd() * 0.35)); n++; }
@@ -585,7 +600,7 @@ function palletRack(x, z, L) {
   im.count = n; im.castShadow = true; im.receiveShadow = true; g.add(im); ob(x - 0.1, z, x + L + 0.1, z + 0.95); ao(x + L / 2, z + 0.45, L + 1, 1.8, 0.5);
 }
 function crateStack(x, z) {
-  const pc = M('#a58a63', { roughness: 0.8 }); add(S, BX(1.0, 0.12, 1.0), M('#8a6a4a', { roughness: 0.8 }), x, 0.06, z); add(S, BX(0.8, 0.5, 0.8), pc, x, 0.37, z); add(S, BX(0.7, 0.4, 0.7), pc, x, 0.82, z); ob(x - 0.5, z - 0.5, x + 0.5, z + 0.5);
+  const pc = M('#d9b98a', { map: BOXT, roughness: 0.8 }); add(S, BX(1.0, 0.12, 1.0), M('#8a6a4a', { roughness: 0.8 }), x, 0.06, z); add(S, BX(0.8, 0.5, 0.8), pc, x, 0.37, z); add(S, BX(0.7, 0.4, 0.7), pc, x, 0.82, z); ob(x - 0.5, z - 0.5, x + 0.5, z + 0.5);
 }
 const clkC = cv2(256, 256), clkG = clkC.getContext('2d'), clkT = ctex(clkC);
 function drawClock() {
@@ -731,11 +746,13 @@ plant(16.4, 7.2, 1); plant(9.6, 0.9, 0.9); lamp(16.5, 4.6, false);
 // ---------------------------------------------------------------------
 const LEDT = paint(64, 128, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (let r = 0; r < 14; r++) for (let c = 0; c < 5; c++) if (rnd() < 0.8) { g.fillStyle = rnd() < 0.7 ? '#19ff7a' : rnd() < 0.5 ? '#ffb020' : '#3aa0ff'; g.fillRect(6 + c * 11, 6 + r * 8.6, 5, 4); } });
 const LEDM = new THREE.MeshStandardMaterial({ color: '#0d0f12', emissive: '#ffffff', emissiveMap: LEDT, emissiveIntensity: 1, roughness: 0.6 });
+const VENTT = paint(64, 128, (g, w, h) => { g.fillStyle = '#14161a'; g.fillRect(0, 0, w, h); for (let r = 0; r < 24; r++) { g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(6, 6 + r * 5, w - 12, 2); } g.strokeStyle = 'rgba(40,120,255,.5)'; g.lineWidth = 3; for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(14 + k * 12, 8); g.bezierCurveTo(8 + k * 14, 50, 22 + k * 10, 80, 14 + k * 12, 120); g.stroke(); } }, true, [1, 1]);
 function rack(x, z, ry) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; S.add(g);
   add(g, RB(0.72, 2.1, 0.95, 0.02), M('#16181c', { roughness: 0.45, metalness: 0.4 }), 0, 1.05, 0);
   add(g, new THREE.PlaneGeometry(0.6, 1.9), LEDM, 0, 1.05, 0.485, { nocast: true });
   add(g, BX(0.02, 1.9, 0.02), STEEL, 0.33, 1.05, 0.49);
+  add(g, new THREE.PlaneGeometry(0.6, 1.9), M('#ffffff', { map: VENTT, roughness: 0.6, metalness: 0.3 }), 0, 1.05, -0.485, { nocast: true, r: [0, Math.PI, 0] });
 }
 [20.85, 21.7, 23.9, 24.75].forEach(x => rack(x, 10.8, 0));
 ob(20.45, 10.3, 22.1, 11.3); ob(23.5, 10.3, 25.15, 11.3);
@@ -1069,7 +1086,7 @@ people.forEach(c => {
 const _v = new THREE.Vector3();
 const rls = ROOMS.map(r => { const el = document.createElement('div'); el.className = 'rl'; el.textContent = r[0]; $lab.appendChild(el); return { el, p: r }; });
 function labels(w, h) {
-  const ro = Math.max(0, Math.min(1, (camera.position.distanceTo(controls.target) - 14) / 14));
+  const ro = h < 380 ? 0 : Math.max(0, Math.min(1, (camera.position.distanceTo(controls.target) - 14) / 14));
   rls.forEach(r => {
     _v.set(r.p[1], r.p[3], r.p[2]).project(camera);
     if (_v.z > 1 || _v.z < -1) { r.el.style.display = 'none'; return; }
@@ -1102,7 +1119,7 @@ ex.oninput = () => { renderer.toneMappingExposure = parseFloat(ex.value); };
 const STEPS = [MAXPR, MAXPR * 0.8, MAXPR * 0.65, 1, 0.8, 0.65].filter((v, i, a) => i === 0 || v < a[i - 1] - 0.05);
 let idx = 0, qm = 'auto';
 const QM = { auto: 'Auto', high: 'Tinggi', mid: 'Sedang', low: 'Rendah' }, QO = ['auto', 'high', 'mid', 'low'];
-function setShadow(sz) { if (sun.shadow.mapSize.x !== sz) { sun.shadow.mapSize.set(sz, sz); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } }
+function setShadow(sz) { if (sun.shadow.mapSize.x !== sz) { sun.shadow.mapSize.set(sz, sz); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } renderer.shadowMap.needsUpdate = true; } }
 function setPR(v) { if (Math.abs(v - pr) > 0.01) { pr = v; renderer.setPixelRatio(pr); resize(); } }
 function applyQ() {
   if (qm === 'auto') { setPR(STEPS[idx]); setShadow(idx === 0 ? 3072 : idx > 3 ? 1024 : 2048); }
@@ -1122,6 +1139,44 @@ function resize() {
 }
 new ResizeObserver(resize).observe($v); resize();
 
+// gabungkan mesh statis ber-material sama jadi satu draw call (ratusan -> puluhan)
+function mergeStatic() {
+  S.updateMatrixWorld(true);
+  const groups = new Map(), nm = new THREE.Matrix3(), v = new THREE.Vector3();
+  S.traverse(m => {
+    if (!m.isMesh || m.isInstancedMesh || Array.isArray(m.material) || !m.geometry.attributes.position || m.renderOrder) return;
+    const key = m.material.uuid + (m.castShadow ? 'c' : 'n') + (m.receiveShadow ? 'r' : 'n');
+    let g = groups.get(key); if (!g) { g = []; groups.set(key, g); } g.push(m);
+  });
+  let merged = 0;
+  groups.forEach(list => {
+    if (list.length < 2) return;
+    const geos = list.map(m => { const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone(); return g; });
+    let n = 0; geos.forEach(g => { n += g.attributes.position.count; });
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let o = 0;
+    list.forEach((m, i) => {
+      const g = geos[i], P_ = g.attributes.position, N_ = g.attributes.normal, U_ = g.attributes.uv; nm.getNormalMatrix(m.matrixWorld);
+      for (let k = 0; k < P_.count; k++, o++) {
+        v.fromBufferAttribute(P_, k).applyMatrix4(m.matrixWorld); pos[o * 3] = v.x; pos[o * 3 + 1] = v.y; pos[o * 3 + 2] = v.z;
+        if (N_) { v.fromBufferAttribute(N_, k).applyMatrix3(nm).normalize(); nor[o * 3] = v.x; nor[o * 3 + 1] = v.y; nor[o * 3 + 2] = v.z; }
+        if (U_) { uv[o * 2] = U_.getX(k); uv[o * 2 + 1] = U_.getY(k); }
+      }
+    });
+    const bg = new THREE.BufferGeometry();
+    bg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); bg.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); bg.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    bg.computeBoundingSphere();
+    const mm = new THREE.Mesh(bg, list[0].material); mm.castShadow = list[0].castShadow; mm.receiveShadow = list[0].receiveShadow; mm.matrixAutoUpdate = false;
+    list.forEach(m => { m.removeFromParent(); }); geos.forEach(g => g.dispose()); S.add(mm); merged += list.length;
+  });
+  return merged;
+}
+// aksen warna lantai per ruangan (identitas ruang) - garis tipis di dalam dinding
+[[0, 0, 9, 8, '#d9467f'], [9, 0, 17, 8, '#3b8be8'], [17, 0, 26, 8, '#8a6cff'], [0, 10, 7, 16, '#f5b81c'], [7, 10, 14, 16, '#22899f'], [14, 10, 20, 16, '#f07b22'], [20, 10, 26, 16, '#1fcf85']].forEach(r => {
+  const m = new THREE.MeshStandardMaterial({ color: r[4], roughness: 0.5, emissive: r[4], emissiveIntensity: 0.18 }), i = 0.16, w = 0.05, x0 = r[0] + i, z0 = r[1] + i, x1 = r[2] - i, z1 = r[3] - i;
+  [[(x0 + x1) / 2, z0, x1 - x0, w], [(x0 + x1) / 2, z1, x1 - x0, w], [x0, (z0 + z1) / 2, w, z1 - z0], [x1, (z0 + z1) / 2, w, z1 - z0]].forEach(b => add(S, BX(b[2], 0.012, b[3]), m, b[0], 0.014, b[1], { nocast: true }));
+});
+mergeStatic();
+
 // bekukan objek statis (hemat CPU) lalu mulai
 S.updateMatrixWorld(true); S.traverse(o => { o.matrixAutoUpdate = false; });
 
@@ -1136,6 +1191,7 @@ function frame(now) {
   const raw = now - last, dt = Math.min(0.05, raw / 1000); last = now; const t = now / 1000;
   people.forEach(c => { update(c, dt); pose(c, dt, t); });
   updateDoors(dt, people);
+  if ((shF++ & 1) === 0 || qm === 'high') renderer.shadowMap.needsUpdate = true;
   if (tw) { tw.k = Math.min(1, tw.k + dt / 0.9); const e = tw.k * tw.k * (3 - 2 * tw.k); camera.position.lerpVectors(tw.p0, tw.p1, e); controls.target.lerpVectors(tw.t0, tw.t1, e); if (tw.k >= 1) tw = null; }
   controls.update(); controls.target.clamp(PAN_MIN, PAN_MAX);
   if (now - scrT > 200) {
