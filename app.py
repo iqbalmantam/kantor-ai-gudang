@@ -531,7 +531,7 @@ with tab_kantor:
 
         _kantor()
         st.caption(
-            "Agent duduk di meja saat bekerja, ke meja supervisor saat butuh jawabanmu, dan jalan-jalan saat senggang. "
+            "Agent duduk di meja saat bekerja, ke area papan kartu saat butuh jawabanmu, dan jalan-jalan saat senggang. "
             "Seret untuk memutar · scroll untuk zoom · klik kanan untuk menggeser."
         )
     with kanan:

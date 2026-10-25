@@ -7,8 +7,8 @@ Antar-ruangan dibatasi partisi kaca berpintu; agent berjalan lewat pintu.
 Keadaan agent diambil dari kartu di database (sama seperti versi isometrik):
 
 - jalan/antri -> agent duduk di meja dan mengetik
-- nunggu_lu   -> agent berjalan ke meja supervisor (Yogi), berdiri, melambai
-- error       -> agent menunggu di meja supervisor, tampak panik
+- nunggu_lu   -> agent berjalan ke area papan kartu, berdiri, melambai
+- error       -> agent menunggu di area papan kartu, tampak panik
 - tidak ada   -> agent keliling (pantry, lobby, ruang rapat, kontrol gudang, dll.)
 
 Three.js dimuat dari CDN (jsdelivr), jadi tidak ada dependensi Python baru.
@@ -595,11 +595,9 @@ plant(0.8, 7.3, 1); plant(8.4, 7.0, 0.9); plant(0.6, 0.9, 0.9);
 }
 
 // ---------------------------------------------------------------------
-// RUANG ADMIN CONTROL (9-17 x 0-8) + meja supervisor "Kamu"
+// RUANG ADMIN CONTROL (9-17 x 0-8) 
 // ---------------------------------------------------------------------
 SEAT.admin_control = desk(10.2, 1.5, 2.2, 1.1, '#6d5a4e', 'code', 'admin_control', 0); chair(SEAT.admin_control, 0);
-const SUP_SEAT = desk(13.4, 1.5, 1.9, 0.9, '#8a6b5a', 'dash', null, 0);
-chair(SUP_SEAT, 0);
 const boardT = paint(640, 360, (g, w, h) => {
   g.fillStyle = '#f4f4ef'; g.fillRect(0, 0, w, h); g.fillStyle = '#222'; g.font = 'bold 34px sans-serif'; g.fillText('PAPAN KARTU', 28, 56); g.fillStyle = '#c9c4b6'; g.fillRect(28, 70, w - 56, 3);
   [['Nunggu lu', D.counts.nunggu, '#c0661a'], ['Berjalan', D.counts.jalan, '#1f6fb2'], ['Selesai', D.counts.selesai, '#1e8449']].forEach((r, i) => {
@@ -950,8 +948,7 @@ function npcSit(id, seat, face) { const c = person({ id, kunci: id, look: LOOK[i
 function npcWalk(id, pts, i0) { const c = person({ id, kunci: id, look: LOOK[id], npc: true, pts, idx: i0 }); const p = pts[i0 % pts.length]; c.x = p[0]; c.y = p[1]; pickIdle(c); c.blob = ao(c.x, c.y, 0.8, 0.8, 0.55); c.blob.removeFromParent(); scene.add(c.blob); npcs.push(c); }
 npcSit('staf1', SEAT.staf1, 0); npcSit('asset', SEAT.asset, FACE.asset); npcSit('hse', SEAT.hse, FACE.hse); npcSit('op1', SEAT.op1, FACE.op1);
 npcWalk('satpam', PAT, 0); npcWalk('staf2', WAN2, 1);
-const kamu = { id: 'kamu', kunci: 'kamu', nama: SUP, peran: 'Supervisor', status: 'idle', npc: false, fixed: true, x: SUP_SEAT[0], y: SUP_SEAT[1], h: 0, hT: 0, face: 0, sitting: true, walking: false, seed: 1.3, rig: makePerson(LOOK.kamu), q: newState(true) };
-const people = chars.concat(npcs, [kamu]);
+const people = chars.concat(npcs);
 screens.forEach(sc => { sc.ch = sc.owner ? (people.filter(p => p.id === sc.owner)[0] || null) : null; });
 
 function update(c, dt) {
