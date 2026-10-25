@@ -98,7 +98,7 @@ canvas{display:block;outline:none}
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang</span></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v7 pintu geser</span></div>
 <div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
 <div id="err"></div></div>
 <script>setTimeout(function(){if(!window.__ok){var e=document.getElementById('err');e.style.display='flex';e.textContent='Gagal memuat Three.js dari CDN (jsdelivr). Pastikan koneksi internet aktif lalu muat ulang halaman.';}},9000);</script>
@@ -365,7 +365,7 @@ function updateDoors(dt, people) {   // pintu geser otomatis: daun meluncur ke s
     let near = false;
     for (const c of people) {
       const dx = d.cx - c.x, dz = d.cz - c.y, q = Math.hypot(dx, dz);
-      if (q < 0.9) { near = true; break; }
+      if (q < 1.15) { near = true; break; }
       if (q < 2.4 && c.walking) {   // sedang berjalan menuju pintu -> buka lebih awal
         const wp = c.path && c.path.length ? c.path[0] : [c.tx, c.ty], vx = wp[0] - c.x, vz = wp[1] - c.y, vl = Math.hypot(vx, vz) || 1;
         const perp = d.alongX ? Math.abs(dz) : Math.abs(dx), along = d.alongX ? Math.abs(dx) : Math.abs(dz);
@@ -397,7 +397,7 @@ function part(x0, z0, x1, z1, doors, o) {
   ds.forEach(d => { put(d[0], d[1], 2.2, 2.66, PM, 0.1, true); put(d[0] - 0.03, d[0] + 0.03, 0, 2.2, STEEL, 0.11, true); put(d[1] - 0.03, d[1] + 0.03, 0, 2.2, STEEL, 0.11, true); });
 }
 part(0, 8, NX, 8, [[4.0, 5.3], [12.0, 13.3], [20.8, 22.1]]);
-part(0, 10, NX, 10, [[5.9, 6.9], [9.8, 11.1], [16.4, 17.7], [22.2, 23.5]]);
+part(0, 10, NX, 10, [[5.6, 6.9], [9.8, 11.1], [16.4, 17.7], [22.2, 23.5]]);
 part(9, 0, 9, 8, [[4.6, 5.9]]); part(17, 0, 17, 8, [[4.6, 5.9]]);
 part(7, 10, 7, 16, [[12.8, 14.1]]); part(14, 10, 14, 16, [[12.5, 13.8]]);
 part(20, 10, 20, 16, [[11.2, 12.5], [14.0, 15.3]]); 
@@ -996,6 +996,7 @@ function npcWalk(id, pts, i0) { const c = person({ id, kunci: id, look: LOOK[id]
 npcSit('staf1', SEAT.staf1, 0); npcSit('asset', SEAT.asset, FACE.asset); npcSit('hse', SEAT.hse, FACE.hse); npcSit('op1', SEAT.op1, FACE.op1);
 npcWalk('satpam', PAT, 0); npcWalk('staf2', WAN2, 1);
 const people = chars.concat(npcs);
+updateDoors(1, people);   // saat dimuat, pintu langsung terbuka bila ada orang di dekatnya
 screens.forEach(sc => { sc.ch = sc.owner ? (people.filter(p => p.id === sc.owner)[0] || null) : null; });
 
 function update(c, dt) {
