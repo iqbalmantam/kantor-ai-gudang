@@ -24,7 +24,7 @@ from agents import AGENTS
 
 
 # Nama yang tampil di label supervisor (karakter di Ruang Supervisor).
-NAMA_SUPERVISOR = "Yogi"
+NAMA_SUPERVISOR = "Kamu"
 
 
 def keadaan() -> dict:
