@@ -345,6 +345,30 @@ const skirt = M('#4d4155', { roughness: 0.5 });
 add(S, BX(NX, 0.1, 0.025), skirt, NX / 2, 0.05, 0.0125); add(S, BX(0.025, 0.1, NZ), skirt, 0.0125, 0.05, NZ / 2);
 
 const PM = M('#ebe8e1', { roughness: 0.85 });
+// pintu berdaun: terbuka otomatis saat ada karakter mendekat, menutup lagi setelah lewat
+const DOORS = [];
+const DOOR_WOOD = P('#9a7a5a', { map: WOOD, roughness: 0.45, clearcoat: 0.3 });
+function makeDoor(alongX, fx, a, b) {
+  const L = b - a - 0.05, H = 2.16, g = new THREE.Group(), leaf = new THREE.Group();
+  g.add(leaf); S.add(g);
+  const A = (geo, mat, x, y, z, o) => add(leaf, geo, mat, x, y, z, o);
+  A(BX(L, 0.95, 0.045), DOOR_WOOD, L / 2, 0.5, 0);
+  A(BX(L, 0.06, 0.06), STEEL, L / 2, 0.98, 0); A(BX(L, 0.06, 0.06), STEEL, L / 2, H, 0);
+  A(BX(0.06, H - 0.98, 0.06), STEEL, 0.03, (H + 0.98) / 2, 0); A(BX(0.06, H - 0.98, 0.06), STEEL, L - 0.03, (H + 0.98) / 2, 0);
+  A(new THREE.PlaneGeometry(L - 0.1, H - 1.05), GLASS, L / 2, (H + 0.98) / 2, 0, { nocast: true, norecv: true });
+  A(new THREE.CylinderGeometry(0.018, 0.018, 0.22, 10), STEEL, L - 0.12, 1.0, 0.06);
+  if (alongX) g.position.set(a + 0.025, 0, fx); else { g.position.set(fx, 0, a + 0.025); g.rotation.y = -Math.PI / 2; }
+  return { g, leaf, alongX, fx, cx: alongX ? (a + b) / 2 : fx, cz: alongX ? fx : (a + b) / 2, o: 0, sd: 1 };
+}
+function updateDoors(dt, people) {
+  DOORS.forEach(d => {
+    let near = null, nd = 0.9;
+    for (const c of people) { const q = Math.hypot(c.x - d.cx, c.y - d.cz); if (q < nd) { nd = q; near = c; } }
+    if (near && d.o < 0.04) { const side = d.alongX ? near.y - d.fx : near.x - d.fx; d.sd = (side > 0) === d.alongX ? 1 : -1; }
+    d.o += ((near ? 1 : 0) - d.o) * Math.min(1, dt * (near ? 5 : 2.5));
+    d.leaf.rotation.y = d.sd * d.o * 1.75;
+  });
+}
 function part(x0, z0, x1, z1, doors, o) {
   o = o || {}; const alongX = Math.abs(z1 - z0) < 1e-6, a0 = alongX ? x0 : z0, a1 = alongX ? x1 : z1, fx = alongX ? z0 : x0;
   const put = (a, b, y0, y1, mat, t, cast) => {
@@ -362,6 +386,7 @@ function part(x0, z0, x1, z1, doors, o) {
     }
     if (alongX) ob(s[0], fx - 0.06, s[1], fx + 0.06); else ob(fx - 0.06, s[0], fx + 0.06, s[1]);
   });
+  ds.forEach(d => DOORS.push(makeDoor(alongX, fx, d[0], d[1])));
   ds.forEach(d => { put(d[0], d[1], 2.2, 2.66, PM, 0.1, true); put(d[0] - 0.03, d[0] + 0.03, 0, 2.2, STEEL, 0.11, true); put(d[1] - 0.03, d[1] + 0.03, 0, 2.2, STEEL, 0.11, true); });
 }
 part(0, 8, NX, 8, [[4.0, 5.3], [12.0, 13.3], [20.8, 22.1]]);
@@ -1102,6 +1127,7 @@ function frame(now) {
   if (document.hidden || !vis) { last = now; return; }
   const raw = now - last, dt = Math.min(0.05, raw / 1000); last = now; const t = now / 1000;
   people.forEach(c => { update(c, dt); pose(c, dt, t); });
+  updateDoors(dt, people);
   if (tw) { tw.k = Math.min(1, tw.k + dt / 0.9); const e = tw.k * tw.k * (3 - 2 * tw.k); camera.position.lerpVectors(tw.p0, tw.p1, e); controls.target.lerpVectors(tw.t0, tw.t1, e); if (tw.k >= 1) tw = null; }
   controls.update(); controls.target.clamp(PAN_MIN, PAN_MAX);
   if (now - scrT > 200) {
