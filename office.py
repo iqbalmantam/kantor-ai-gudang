@@ -358,15 +358,22 @@ function makeDoor(alongX, fx, a, b) {
   A(new THREE.PlaneGeometry(L - 0.1, H - 1.05), GLASS, L / 2, (H + 0.98) / 2, 0, { nocast: true, norecv: true });
   A(new THREE.CylinderGeometry(0.018, 0.018, 0.22, 10), STEEL, L - 0.12, 1.0, 0.06);
   if (alongX) g.position.set(a + 0.025, 0, fx); else { g.position.set(fx, 0, a + 0.025); g.rotation.y = -Math.PI / 2; }
-  return { g, leaf, alongX, fx, cx: alongX ? (a + b) / 2 : fx, cz: alongX ? fx : (a + b) / 2, o: 0, sd: 1 };
+  return { g, leaf, L: L + 0.04, alongX, fx, cx: alongX ? (a + b) / 2 : fx, cz: alongX ? fx : (a + b) / 2, o: 0, sd: 1 };
 }
-function updateDoors(dt, people) {
+function updateDoors(dt, people) {   // pintu geser otomatis: daun meluncur ke samping dinding, tidak menyapu ruang jalan
   DOORS.forEach(d => {
-    let near = null, nd = 0.9;
-    for (const c of people) { const q = Math.hypot(c.x - d.cx, c.y - d.cz); if (q < nd) { nd = q; near = c; } }
-    if (near && d.o < 0.04) { const side = d.alongX ? near.y - d.fx : near.x - d.fx; d.sd = (side > 0) === d.alongX ? 1 : -1; }
-    d.o += ((near ? 1 : 0) - d.o) * Math.min(1, dt * (near ? 5 : 2.5));
-    d.leaf.rotation.y = d.sd * d.o * 1.75;
+    let near = false;
+    for (const c of people) {
+      const dx = d.cx - c.x, dz = d.cz - c.y, q = Math.hypot(dx, dz);
+      if (q < 0.9) { near = true; break; }
+      if (q < 2.4 && c.walking) {   // sedang berjalan menuju pintu -> buka lebih awal
+        const wp = c.path && c.path.length ? c.path[0] : [c.tx, c.ty], vx = wp[0] - c.x, vz = wp[1] - c.y, vl = Math.hypot(vx, vz) || 1;
+        const perp = d.alongX ? Math.abs(dz) : Math.abs(dx), along = d.alongX ? Math.abs(dx) : Math.abs(dz);
+        if ((vx * dx + vz * dz) / (vl * q) > 0.55 && along < 1.1 && perp < 2.4) { near = true; break; }
+      }
+    }
+    d.o += ((near ? 1 : 0) - d.o) * Math.min(1, dt * (near ? 9 : 3));
+    d.leaf.position.x = -d.o * d.L; d.leaf.position.z = Math.min(1, d.o * 6) * 0.085;
   });
 }
 function part(x0, z0, x1, z1, doors, o) {
