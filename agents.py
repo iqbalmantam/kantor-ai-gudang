@@ -24,18 +24,24 @@ AGENTS = {
         "peran": "HRD",
         "gender": "wanita",
         "tugas": "Absensi, kebutuhan manpower, cuti/lembur, rekrutmen, kedisiplinan, pembinaan karyawan.",
+        "warna": "#f472b6",
+        "keahlian": ["Absensi", "Manpower", "Cuti & Lembur", "Rekrutmen"],
     },
     "manager_ops": {
         "nama": "Tris",
         "peran": "Manager Operation",
         "gender": "pria",
         "tugas": "Memimpin operasional gudang, memutuskan prioritas, menyetujui eskalasi, target dan KPI.",
+        "warna": "#38bdf8",
+        "keahlian": ["Prioritas", "Eskalasi", "Target & KPI", "Strategi"],
     },
     "op_control": {
         "nama": "Yogi",
         "peran": "Operation Control",
         "gender": "pria",
         "tugas": "Memantau jalannya operasional harian, produktivitas, antrean kerja, dan temuan lapangan.",
+        "warna": "#fbbf24",
+        "keahlian": ["Produktivitas", "Antrean kerja", "Temuan lapangan", "Monitoring"],
     },
 }
 

@@ -40,9 +40,14 @@ def init_db():
                 status TEXT NOT NULL DEFAULT 'antri',
                 hop INTEGER NOT NULL DEFAULT 0,
                 dibuat TEXT NOT NULL,
-                diubah TEXT NOT NULL
+                diubah TEXT NOT NULL,
+                prioritas TEXT NOT NULL DEFAULT 'normal'
             )"""
         )
+        # Migrasi untuk database lama yang belum punya kolom prioritas
+        kolom = [r["name"] for r in c.execute("PRAGMA table_info(kartu)").fetchall()]
+        if "prioritas" not in kolom:
+            c.execute("ALTER TABLE kartu ADD COLUMN prioritas TEXT NOT NULL DEFAULT 'normal'")
         c.execute(
             """CREATE TABLE IF NOT EXISTS pesan (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,15 +105,22 @@ def ubah_status(kartu_id: int, status: str):
         )
 
 
-def buat_kartu(judul: str, deskripsi: str, agent: str, hop: int = 0) -> dict:
+PRIORITAS = ("rendah", "normal", "tinggi", "urgent")
+
+
+def buat_kartu(
+    judul: str, deskripsi: str, agent: str, hop: int = 0, prioritas: str = "normal"
+) -> dict:
     if agent not in AGENTS:
         raise ValueError(f"Agent tidak dikenal: {agent}")
+    if prioritas not in PRIORITAS:
+        prioritas = "normal"
     t = sekarang()
     with db() as c:
         cur = c.execute(
-            "INSERT INTO kartu (judul, deskripsi, agent, status, hop, dibuat, diubah)"
-            " VALUES (?,?,?,?,?,?,?)",
-            (judul, deskripsi, agent, "antri", hop, t, t),
+            "INSERT INTO kartu (judul, deskripsi, agent, status, hop, dibuat, diubah, prioritas)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (judul, deskripsi, agent, "antri", hop, t, t, prioritas),
         )
         row = c.execute("SELECT * FROM kartu WHERE id=?", (cur.lastrowid,)).fetchone()
     return _kartu(row)
@@ -146,6 +158,7 @@ def proses_kartu(kartu_id: int):
                 hasil["catatan_serah"] or kartu["deskripsi"],
                 tujuan,
                 hop=kartu["hop"] + 1,
+                prioritas=kartu.get("prioritas", "normal"),
             )
             tambah_pesan(
                 kid,
@@ -163,3 +176,61 @@ def jawab_kartu(kartu_id: int, jawaban: str):
     tambah_pesan(kartu_id, "supervisor", jawaban.strip())
     ubah_status(kartu_id, "antri")
     proses_kartu(kartu_id)
+
+
+def hapus_kartu(kartu_id: int):
+    with db() as c:
+        c.execute("DELETE FROM pesan WHERE kartu_id=?", (kartu_id,))
+        c.execute("DELETE FROM kartu WHERE id=?", (kartu_id,))
+
+
+def tandai_selesai(kartu_id: int):
+    """Supervisor menutup kartu secara manual."""
+    tambah_pesan(kartu_id, "sistem", "Kartu ditutup manual oleh supervisor.")
+    ubah_status(kartu_id, "selesai")
+
+
+def _ts(teks: str) -> datetime:
+    return datetime.fromisoformat(teks)
+
+
+def statistik() -> dict:
+    """Ringkasan angka untuk dashboard."""
+    kartu = daftar_kartu()
+    total = len(kartu)
+    per_status = {s: 0 for s in ("antri", "jalan", "nunggu_lu", "error", "selesai")}
+    per_agent = {k: {"aktif": 0, "selesai": 0, "menunggu": 0} for k in AGENTS}
+    per_hari: dict[str, int] = {}
+    per_prioritas = {p: 0 for p in PRIORITAS}
+    durasi = []
+    for k in kartu:
+        per_status[k["status"]] = per_status.get(k["status"], 0) + 1
+        per_prioritas[k.get("prioritas", "normal")] = per_prioritas.get(k.get("prioritas", "normal"), 0) + 1
+        a = per_agent.get(k["agent"])
+        if a is not None:
+            if k["status"] == "selesai":
+                a["selesai"] += 1
+            elif k["status"] in ("nunggu_lu", "error"):
+                a["menunggu"] += 1
+            else:
+                a["aktif"] += 1
+        hari = k["dibuat"][:10]
+        per_hari[hari] = per_hari.get(hari, 0) + 1
+        if k["status"] == "selesai":
+            try:
+                durasi.append((_ts(k["diubah"]) - _ts(k["dibuat"])).total_seconds())
+            except ValueError:
+                pass
+    selesai = per_status["selesai"]
+    return {
+        "total": total,
+        "per_status": per_status,
+        "per_agent": per_agent,
+        "per_hari": dict(sorted(per_hari.items())),
+        "per_prioritas": per_prioritas,
+        "aktif": per_status["antri"] + per_status["jalan"],
+        "menunggu": per_status["nunggu_lu"] + per_status["error"],
+        "selesai": selesai,
+        "rasio_selesai": (selesai / total * 100) if total else 0.0,
+        "rata_durasi_detik": (sum(durasi) / len(durasi)) if durasi else 0.0,
+    }
