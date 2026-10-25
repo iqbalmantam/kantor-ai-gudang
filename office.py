@@ -895,7 +895,22 @@ const ADJ = CORN.map(() => []);
 for (let i = 0; i < CORN.length; i++) for (let j = i + 1; j < CORN.length; j++) {
   if (clear(CORN[i][0], CORN[i][1], CORN[j][0], CORN[j][1])) { const d = Math.hypot(CORN[i][0] - CORN[j][0], CORN[i][1] - CORN[j][1]); ADJ[i].push([j, d]); ADJ[j].push([i, d]); }
 }
-function route(ax, ay, bx, by) {   // graf visibilitas (dihitung sekali) + Dijkstra
+const inObs = (x, y) => OB.some(o => x > o[0] - 0.28 && x < o[2] + 0.28 && y > o[1] - 0.28 && y < o[3] + 0.28);
+function nearFree(x, y) {   // titik bebas terdekat bila posisi berada terlalu dekat tembok/perabot
+  if (!inObs(x, y)) return null;
+  for (let r = 0.1; r <= 1.8; r += 0.1) for (let k = 0; k < 24; k++) {
+    const a = k / 24 * 6.283, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
+    if (px > 0.3 && px < NX - 0.3 && py > 0.3 && py < NZ - 0.3 && !inObs(px, py) && !OB.some(o => hit(x, y, px, py, o, 0.06))) return [px, py];
+  }
+  return null;
+}
+function route(ax, ay, bx, by) {
+  const s = nearFree(ax, ay), e = nearFree(bx, by);
+  const p = route0(s ? s[0] : ax, s ? s[1] : ay, e ? e[0] : bx, e ? e[1] : by);
+  if (e) p.push([bx, by]);
+  return s ? [s].concat(p) : p;
+}
+function route0(ax, ay, bx, by) {   // graf visibilitas (dihitung sekali) + Dijkstra
   if (clear(ax, ay, bx, by)) return [[bx, by]];
   const n = CORN.length, S0 = n, E0 = n + 1, dist = new Array(n + 2).fill(1e9), prev = new Array(n + 2).fill(-1), done = new Array(n + 2).fill(false), visS = [], visE = new Array(n).fill(false);
   for (let i = 0; i < n; i++) { if (clear(ax, ay, CORN[i][0], CORN[i][1])) visS.push(i); if (clear(CORN[i][0], CORN[i][1], bx, by)) visE[i] = true; }
@@ -925,7 +940,7 @@ function pickTarget(c) {
   else pickIdle(c);
 }
 let saved = {};
-try { saved = JSON.parse(sessionStorage.getItem('kantor_pos3d_v2') || '{}'); } catch (e) {}
+try { saved = JSON.parse(sessionStorage.getItem('kantor_pos3d_v3') || '{}'); } catch (e) {}
 function newState(sit) { return { sit: sit ? 1 : 0, walk: 0, typ: 0, wave: 0, err: 0, ph: 0 }; }
 function person(o) {
   const c = Object.assign({ walking: false, sitting: false, atSeat: false, dwell: 0, seed: rnd() * 9, h: 0, hT: 0, path: [], face: 0, status: 'idle', pts: null, fixed: false, npc: false, typing: false, x: 0, y: 0, tx: 0, ty: 0, idx: 0 }, o);
@@ -934,7 +949,7 @@ function person(o) {
 const chars = D.agents.map((a, i) => {
   const c = person(Object.assign({}, a, { id: a.kunci, idx: i, seed: i * 2.1, look: LOOK[a.kunci] || FALL[i % FALL.length], face: FACE[a.kunci] || 0 }));
   const s = seatOf(c);
-  if (saved[a.kunci]) { c.x = saved[a.kunci][0]; c.y = saved[a.kunci][1]; }
+  if (saved[a.kunci] && !inObs(saved[a.kunci][0], saved[a.kunci][1])) { c.x = saved[a.kunci][0]; c.y = saved[a.kunci][1]; }
   else if (working(c)) { c.x = s[0]; c.y = s[1]; c.q.sit = 1; c.sitting = true; c.h = c.hT = c.face; }
   else if (waiting(c)) { const w = WAIT[i % WAIT.length]; c.x = w[0]; c.y = w[1]; c.hT = c.h = Math.PI; }
   else { const p = IDLE[(i * 2 + 1) % IDLE.length]; c.x = p[0]; c.y = p[1]; }
@@ -964,7 +979,7 @@ function update(c, dt) {
     if (c.status === 'idle') { c.dwell -= dt; if (c.dwell <= 0) pickIdle(c); }
   }
 }
-setInterval(() => { try { const o = {}; chars.forEach(c => { o[c.kunci] = [c.x, c.y]; }); sessionStorage.setItem('kantor_pos3d_v2', JSON.stringify(o)); } catch (e) {} }, 1000);
+setInterval(() => { try { const o = {}; chars.forEach(c => { o[c.kunci] = [c.x, c.y]; }); sessionStorage.setItem('kantor_pos3d_v3', JSON.stringify(o)); } catch (e) {} }, 1000);
 
 function pose(c, dt, t) {
   const r = c.rig, q = c.q, k = Math.min(1, dt * 4);
