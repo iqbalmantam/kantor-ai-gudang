@@ -558,9 +558,9 @@ with tab_kantor:
         H(
             """
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <span class="tag">Ruang Kerja</span><span class="tag">Ruang Supervisor</span><span class="tag">Ruang Rapat</span>
-            <span class="tag">Lobby</span><span class="tag">Pantry & Lounge</span><span class="tag">Kontrol Gudang</span>
-            <span class="tag">Ruang Server</span><span class="tag">Arsip & Gudang</span><span class="tag">Area Parkir</span>
+            <span class="tag">Ruang HRD</span><span class="tag">Ruang Manager Operation</span><span class="tag">Ruang Operation Control</span>
+            <span class="tag">Ruang Asset Management</span><span class="tag">Ruang HSE</span><span class="tag">Ruang Server</span>
+            <span class="tag">Ruang Meeting</span><span class="tag">Area Parkir</span>
             </div>
             """
         )
@@ -738,7 +738,7 @@ with tab_fitur:
         ("🔔", "Notifikasi WhatsApp / Telegram", "Kirim peringatan kartu urgent langsung ke ponsel supervisor.", "Ide"),
         ("⏰", "SLA & eskalasi otomatis", "Kartu yang menggantung terlalu lama otomatis naik prioritas dan dieskalasi.", "Ide"),
         ("🎙️", "Perintah suara", "Beri tugas ke agent dengan bicara, lengkap dengan transkrip otomatis.", "Ide"),
-        ("🗓️", "Rapat pagi otomatis", "Agent menyusun briefing harian dan notulen di Ruang Rapat 3D.", "Ide"),
+        ("🗓️", "Rapat pagi otomatis", "Agent menyusun briefing harian dan notulen di Ruang Meeting 3D.", "Ide"),
         ("🔗", "Integrasi WMS / ERP", "Hubungkan data nyata agar jawaban agent berbasis angka operasional.", "Ide"),
         ("🛡️", "Peran & hak akses", "Login multi-pengguna dengan peran supervisor, manajer, dan viewer.", "Ide"),
         ("🧾", "Audit log", "Riwayat lengkap siapa mengubah apa, kapan, dan mengapa.", "Ide"),

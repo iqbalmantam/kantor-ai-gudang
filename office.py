@@ -1,7 +1,7 @@
 """Simulasi kantor 3D realistis (WebGL / Three.js) untuk Kantor AI Gudang.
 
-Denah 26 x 16 m: Ruang Kerja, Ruang Supervisor, Ruang Rapat, Koridor, Lobby,
-Pantry & Lounge, Kontrol Gudang, Ruang Server, Arsip & Gudang, plus Area Parkir.
+Denah 26 x 16 m: Ruang HRD, Ruang Manager Operation, Ruang Meeting, Koridor,
+Ruang Operation Control, Ruang Asset Management, Ruang HSE, Ruang Server, plus Area Parkir.
 Antar-ruangan dibatasi partisi kaca berpintu; agent berjalan lewat pintu.
 
 Keadaan agent diambil dari kartu di database (sama seperti versi isometrik):
@@ -239,10 +239,10 @@ sun.shadow.mapSize.set(3072, 3072);
 scene.add(sun, sun.target);
 const fill = new THREE.DirectionalLight(0xcfe0ff, 0.7); fill.position.set(30, 14, 30); scene.add(fill);
 const LIGHTS = [];
-[[5, 2.7, 4], [12.5, 2.7, 4], [20.5, 2.7, 4], [13, 2.7, 9], [3.5, 2.7, 13], [10.5, 2.7, 13], [17, 2.7, 13]].forEach(p => {
+[[4.5, 2.7, 4], [13, 2.7, 4], [21.5, 2.7, 4], [13, 2.7, 9], [3.5, 2.7, 13], [10.5, 2.7, 13], [17, 2.7, 13]].forEach(p => {
   const l = new THREE.PointLight(0xffe3bd, 9, 12, 2); l.position.set(p[0], p[1], p[2]); scene.add(l); LIGHTS.push(l);
 });
-{ const l = new THREE.PointLight(0x6fa8ff, 5, 6, 2); l.position.set(23, 2.2, 11.6); scene.add(l); LIGHTS.push(l); }
+{ const l = new THREE.PointLight(0x6fa8ff, 5, 6, 2); l.position.set(23, 2.2, 13); scene.add(l); LIGHTS.push(l); }
 
 // rintangan untuk pathfinding
 const OB = [];
@@ -295,9 +295,9 @@ function zone(x0, z0, x1, z1, mat, tile) {
   for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / tile, uv.getY(i) * d / tile);
   const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); m.receiveShadow = true; S.add(m);
 }
-zone(0, 0, 15, 8, FL.wood, 4); zone(15, 0, 26, 8, FL.carpet, 2); zone(0, 8, 26, 10, FL.conc, 4);
-zone(0, 10, 7, 16, FL.marble, 2); zone(7, 10, 14, 16, FL.tile, 4); zone(14, 10, 20, 16, FL.carpet, 2);
-zone(20, 10, 26, 13, FL.raised, 4); zone(20, 13, 26, 16, FL.conc, 4); zone(-1, 16, 27, 21.4, FL.asph, 4);
+zone(0, 0, 9, 8, FL.wood, 4); zone(9, 0, 26, 8, FL.carpet, 2); zone(0, 8, 26, 10, FL.conc, 4);
+zone(0, 10, 7, 16, FL.carpet, 2); zone(7, 10, 14, 16, FL.conc, 4); zone(14, 10, 20, 16, FL.tile, 4);
+zone(20, 10, 26, 16, FL.raised, 4); zone(-1, 16, 27, 21.4, FL.asph, 4);
 add(S, BX(NX + WT, 0.24, NZ + WT), M('#2a2530'), NX / 2 - WT / 2, -0.13, NZ / 2 - WT / 2, { nocast: true });
 add(S, BX(28, 0.24, 5.4), M('#2a2d31'), 13, -0.13, 18.7, { nocast: true });
 add(S, BX(28, 0.1, 0.18), M('#9a9a96'), 13, 0.05, 16.09);
@@ -330,7 +330,7 @@ function outerWall(axis, len, ops, mat) {
   let p = s0; ops.forEach(o => { put(p, o[0], WIN_Y0, WIN_Y1); p = o[1]; }); put(p, len, WIN_Y0, WIN_Y1);
   ops.forEach(o => win(axis, o[0], o[1]));
 }
-outerWall('x', NX, [[1, 3.5], [5.5, 8.5], [16.5, 19.5], [21.5, 24.5]], wm1);
+outerWall('x', NX, [[1, 3.5], [5.5, 8.5], [10, 12.5], [13.5, 16], [18, 21], [22, 25]], wm1);
 outerWall('z', NZ, [[1, 3], [6.5, 7.8], [11, 13], [14, 15.5]], wm2);
 const skirt = M('#4d4155', { roughness: 0.5 });
 add(S, BX(NX, 0.1, 0.025), skirt, NX / 2, 0.05, 0.0125); add(S, BX(0.025, 0.1, NZ), skirt, 0.0125, 0.05, NZ / 2);
@@ -355,11 +355,11 @@ function part(x0, z0, x1, z1, doors, o) {
   });
   ds.forEach(d => { put(d[0], d[1], 2.2, 2.66, PM, 0.1, true); put(d[0] - 0.03, d[0] + 0.03, 0, 2.2, STEEL, 0.11, true); put(d[1] - 0.03, d[1] + 0.03, 0, 2.2, STEEL, 0.11, true); });
 }
-part(0, 8, NX, 8, [[8.4, 9.7], [12.0, 13.3], [18.8, 20.1], [23.0, 24.3]]);
-part(0, 10, NX, 10, [[3.0, 4.3], [9.8, 11.1], [16.4, 17.7], [22.2, 23.5]]);
-part(10, 0, 10, 8, [[4.6, 5.9]]); part(15, 0, 15, 8, [[5.0, 6.3]]);
+part(0, 8, NX, 8, [[4.0, 5.3], [12.0, 13.3], [20.8, 22.1]]);
+part(0, 10, NX, 10, [[5.9, 6.9], [9.8, 11.1], [16.4, 17.7], [22.2, 23.5]]);
+part(9, 0, 9, 8, [[4.6, 5.9]]); part(17, 0, 17, 8, [[4.6, 5.9]]);
 part(7, 10, 7, 16, [[12.8, 14.1]]); part(14, 10, 14, 16, [[12.5, 13.8]]);
-part(20, 10, 20, 16, [[11.2, 12.5], [14.0, 15.3]]); part(20, 13, NX, 13, []);
+part(20, 10, 20, 16, [[11.2, 12.5], [14.0, 15.3]]); 
 
 // pemandangan di luar jendela
 // kota di kejauhan (kotak 3D berkabut) untuk pemandangan dari jendela
@@ -497,16 +497,20 @@ function extinguisher(x, z, ry) {
 function glow(w, h, tx) { return new THREE.MeshStandardMaterial({ map: tx, emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0.6, roughness: 0.5 }); }
 
 // =====================================================================
-// RUANG KERJA AI (0-10 x 0-8)
+// 7 RUANGAN: atas = HRD | MANAGER OPERATION | MEETING ; bawah = OPERATION CONTROL | ASSET MANAGEMENT | HSE | SERVER
 // =====================================================================
 const SEAT = {}, FACE = {};
-SEAT.hrd = desk(1.2, 2.2, 2, 1.1, '#d0a070', 'code', 'hrd', 0);
-SEAT.manager_ops = desk(6.4, 1.6, 2, 1.1, '#d0a070', 'code', 'manager_ops', 0);
-SEAT.op_control = desk(3.6, 6.0, 2, 1.1, '#d0a070', 'code', 'op_control', 0);
-SEAT.staf1 = desk(6.9, 5.2, 2, 1.1, '#d0a070', 'code', 'staf1', 0);
-['hrd', 'manager_ops', 'op_control', 'staf1'].forEach(k => chair(SEAT[k], 0));
-{
-  const g = new THREE.Group(); g.position.set(0.08, 0, 4.2); S.add(g);
+function signBoard(x, y, z, w, h, ry, title, lines, accent) {
+  const t = paint(512, Math.round(512 * h / w), (g, W, H) => {
+    g.fillStyle = '#f6f5f0'; g.fillRect(0, 0, W, H); g.fillStyle = accent; g.fillRect(0, 0, W, 54);
+    g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.fillText(title, 18, 38);
+    lines.forEach((l, i) => { g.fillStyle = accent; g.beginPath(); g.arc(28, 92 + i * 38, 6, 0, 6.3); g.fill(); g.fillStyle = '#2a2d33'; g.font = '24px sans-serif'; g.fillText(l, 46, 100 + i * 38); });
+  });
+  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; S.add(g);
+  add(g, RB(w, h, 0.04, 0.012), STEEL, 0, 0, 0); add(g, new THREE.PlaneGeometry(w - 0.1, h - 0.1), M('#ffffff', { map: t, roughness: 0.4 }), 0, 0, 0.025, { nocast: true });
+}
+function bookshelf(px, pz) {
+  const g = new THREE.Group(); g.position.set(px, 0, pz); S.add(g);
   const wd = P('#8a6a4a', { map: WOOD, roughness: 0.55 });
   add(g, BX(0.72, 2.0, 0.04), wd, 0.38, 1.0, 0.02); add(g, BX(0.72, 2.0, 0.04), wd, 0.38, 1.0, 1.98); add(g, BX(0.02, 2.0, 2.0), wd, 0.02, 1.0, 1.0);
   for (let l = 0; l <= 5; l++) add(g, BX(0.72, 0.03, 1.96), wd, 0.38, 0.02 + l * 0.39, 1.0);
@@ -521,13 +525,27 @@ SEAT.staf1 = desk(6.9, 5.2, 2, 1.1, '#d0a070', 'code', 'staf1', 0);
       im.setMatrixAt(n, o.matrix); im.setColorAt(n, new THREE.Color(pal[Math.floor(rnd() * pal.length)]).multiplyScalar(0.8 + rnd() * 0.3)); n++; z += t + 0.003;
     }
   }
-  im.count = n; im.castShadow = true; im.receiveShadow = true; g.add(im); ao(0.55, 5.2, 1.3, 2.7, 0.5); ob(0.1, 4.2, 0.9, 6.2);
+  im.count = n; im.castShadow = true; im.receiveShadow = true; g.add(im); ao(px + 0.47, pz + 1.0, 1.3, 2.7, 0.5); ob(px + 0.02, pz, px + 0.82, pz + 2.0);
 }
-{ // mesin fotokopi
-  add(S, RB(0.9, 0.85, 0.6, 0.02), M('#d8d6d0', { roughness: 0.5 }), 9.2, 0.43, 0.4); add(S, RB(0.8, 0.12, 0.5, 0.02), BLACK, 9.2, 0.92, 0.4); add(S, RB(0.5, 0.01, 0.35, 0.004), M('#f4f4f0'), 9.2, 0.99, 0.4);
-  ob(8.7, 0.1, 9.7, 0.7); ao(9.2, 0.5, 1.5, 1.2, 0.45);
+function cabinet(cx, cz, w, col) {
+  add(S, RB(w, 0.9, 0.4, 0.015), M(col || '#cfc9bd', { roughness: 0.6 }), cx, 0.45, cz); ob(cx - w / 2, cz - 0.2, cx + w / 2, cz + 0.2);
+  add(S, RB(w + 0.04, 0.04, 0.44, 0.01), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), cx, 0.92, cz);
 }
-plant(1.0, 7.3, 1); plant(9.3, 6.9, 0.9); plant(0.6, 0.9, 0.9);
+function palletRack(x, z, L) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); S.add(g);
+  const og = M('#e8751a', { roughness: 0.5, metalness: 0.4 }), bl = M('#1f5fa8', { roughness: 0.5, metalness: 0.4 }), slat = M('#a58a63', { roughness: 0.8 });
+  const bays = Math.max(1, Math.round(L / 1.7)), bw = L / bays;
+  for (let i = 0; i <= bays; i++) [0, 0.9].forEach(zz => add(g, BX(0.07, 2.6, 0.07), og, i * bw, 1.3, zz + 0.035));
+  const ys = [0.35, 1.2, 2.05], im = new THREE.InstancedMesh(BX(1, 1, 1), M('#ffffff', { roughness: 0.85 }), 80), o = new THREE.Object3D(); let n = 0;
+  for (let b = 0; b < bays; b++) ys.forEach(y => {
+    [0.03, 0.87].forEach(zz => add(g, BX(bw, 0.1, 0.05), bl, b * bw + bw / 2, y, zz)); add(g, BX(bw - 0.1, 0.025, 0.8), slat, b * bw + bw / 2, y + 0.06, 0.45);
+    for (let k = 0; k < 3 && n < 80; k++) { const w = 0.35 + rnd() * 0.15, h = 0.3 + rnd() * 0.25; o.position.set(b * bw + 0.3 + k * (bw - 0.5) / 3 + 0.1, y + 0.07 + h / 2, 0.45); o.scale.set(w, h, 0.5 + rnd() * 0.2); o.rotation.set(0, 0, 0); o.updateMatrix(); im.setMatrixAt(n, o.matrix); im.setColorAt(n, new THREE.Color('#b08a55').multiplyScalar(0.8 + rnd() * 0.35)); n++; }
+  });
+  im.count = n; im.castShadow = true; im.receiveShadow = true; g.add(im); ob(x - 0.1, z, x + L + 0.1, z + 0.95); ao(x + L / 2, z + 0.45, L + 1, 1.8, 0.5);
+}
+function crateStack(x, z) {
+  const pc = M('#a58a63', { roughness: 0.8 }); add(S, BX(1.0, 0.12, 1.0), M('#8a6a4a', { roughness: 0.8 }), x, 0.06, z); add(S, BX(0.8, 0.5, 0.8), pc, x, 0.37, z); add(S, BX(0.7, 0.4, 0.7), pc, x, 0.82, z); ob(x - 0.5, z - 0.5, x + 0.5, z + 0.5);
+}
 const clkC = cv2(256, 256), clkG = clkC.getContext('2d'), clkT = ctex(clkC);
 function drawClock() {
   const g = clkG, d = new Date(); g.clearRect(0, 0, 256, 256);
@@ -538,6 +556,22 @@ function drawClock() {
   hand(h / 12 * 6.283, 62, 8, '#222'); hand(m / 60 * 6.283, 92, 5, '#222'); hand(s / 60 * 6.283, 100, 2, '#c0392b'); clkT.needsUpdate = true;
 }
 drawClock();
+
+// ---------------------------------------------------------------------
+// RUANG HRD (0-9 x 0-8)
+// ---------------------------------------------------------------------
+SEAT.hrd = desk(1.4, 2.4, 2, 1.1, '#d0a070', 'code', 'hrd', 0);
+SEAT.staf1 = desk(5.6, 2.4, 2, 1.1, '#d0a070', 'code', 'staf1', 0);
+chair(SEAT.hrd, 0); chair(SEAT.staf1, 0);
+bookshelf(0.08, 4.2);
+{ // mesin fotokopi
+  add(S, RB(0.9, 0.85, 0.6, 0.02), M('#d8d6d0', { roughness: 0.5 }), 8.2, 0.43, 0.4); add(S, RB(0.8, 0.12, 0.5, 0.02), BLACK, 8.2, 0.92, 0.4); add(S, RB(0.5, 0.01, 0.35, 0.004), M('#f4f4f0'), 8.2, 0.99, 0.4);
+  ob(7.7, 0.1, 8.7, 0.7); ao(8.2, 0.5, 1.5, 1.2, 0.45);
+}
+signBoard(4.5, 1.75, 0.03, 1.7, 1.0, 0, 'RUANG HRD', ['Absensi & kehadiran', 'Cuti & lembur', 'Manpower & rekrutmen'], '#c2417a');
+add(S, new THREE.CylinderGeometry(0.55, 0.55, 0.05, 28), P('#d0a070', { map: WOOD, roughness: 0.4 }), 6.3, 0.74, 6.2); add(S, new THREE.CylinderGeometry(0.04, 0.04, 0.72, 10), STEEL, 6.3, 0.37, 6.2); ob(5.7, 5.6, 6.9, 6.8);
+chairL(6.3, 5.3, 0, '#8a4560'); chairL(6.3, 7.1, Math.PI, '#8a4560');
+plant(0.8, 7.3, 1); plant(8.4, 7.0, 0.9); plant(0.6, 0.9, 0.9);
 {
   const g = new THREE.Group(); g.rotation.y = Math.PI / 2; g.position.set(0.02, 2.5, 4.95); S.add(g);
   add(g, new THREE.CylinderGeometry(0.25, 0.25, 0.04, 40), BLACK, 0, 0, 0, { r: [Math.PI / 2, 0, 0] });
@@ -551,10 +585,11 @@ drawClock();
   add(p, BX(0.58, 0.78, 0.03), M('#e9e4d8', { roughness: 0.5 }), 0, 0, 0); add(p, new THREE.PlaneGeometry(0.5, 0.7), M('#ffffff', { map: t, roughness: 0.6 }), 0, 0, 0.017, { nocast: true });
 }
 
-// =====================================================================
-// RUANG SUPERVISOR (10-15 x 0-8)
-// =====================================================================
-const SUP_SEAT = desk(11.55, 1.8, 1.9, 0.9, '#8a6b5a', 'dash', null, 0);
+// ---------------------------------------------------------------------
+// RUANG MANAGER OPERATION (9-17 x 0-8) + meja supervisor "Kamu"
+// ---------------------------------------------------------------------
+SEAT.manager_ops = desk(10.2, 1.5, 2.2, 1.1, '#6d5a4e', 'code', 'manager_ops', 0); chair(SEAT.manager_ops, 0);
+const SUP_SEAT = desk(13.4, 1.5, 1.9, 0.9, '#8a6b5a', 'dash', null, 0);
 chair(SUP_SEAT, 0);
 const boardT = paint(640, 360, (g, w, h) => {
   g.fillStyle = '#f4f4ef'; g.fillRect(0, 0, w, h); g.fillStyle = '#222'; g.font = 'bold 34px sans-serif'; g.fillText('PAPAN KARTU', 28, 56); g.fillStyle = '#c9c4b6'; g.fillRect(28, 70, w - 56, 3);
@@ -563,9 +598,9 @@ const boardT = paint(640, 360, (g, w, h) => {
     g.font = '32px sans-serif'; g.fillStyle = '#333'; g.fillText(r[0], 76, y); g.font = 'bold 54px sans-serif'; g.fillStyle = r[2]; g.textAlign = 'right'; g.fillText(String(r[1]), w - 40, y + 6); g.textAlign = 'left';
   });
 });
-add(S, RB(3.3, 1.3, 0.04, 0.012), STEEL, 12.5, 1.85, 0.02); add(S, new THREE.PlaneGeometry(3.14, 1.14), M('#ffffff', { map: boardT, roughness: 0.35 }), 12.5, 1.85, 0.045, { nocast: true });
-add(S, BX(3.3, 0.04, 0.09), STEEL, 12.5, 1.19, 0.06);
-['#c0392b', '#2980b9', '#27ae60'].forEach((c, i) => add(S, new THREE.CylinderGeometry(0.012, 0.012, 0.12, 8), M(c, { roughness: 0.4 }), 11.8 + i * 0.12, 1.225, 0.07, { r: [0, 0, Math.PI / 2] }));
+add(S, RB(3.0, 1.2, 0.04, 0.012), STEEL, 13.3, 1.85, 0.02); add(S, new THREE.PlaneGeometry(2.84, 1.04), M('#ffffff', { map: boardT, roughness: 0.35 }), 13.3, 1.85, 0.045, { nocast: true });
+add(S, BX(3.0, 0.04, 0.09), STEEL, 13.3, 1.24, 0.06);
+['#c0392b', '#2980b9', '#27ae60'].forEach((c, i) => add(S, new THREE.CylinderGeometry(0.012, 0.012, 0.12, 8), M(c, { roughness: 0.4 }), 12.6 + i * 0.12, 1.275, 0.07, { r: [0, 0, Math.PI / 2] }));
 const rugT = paint(512, 256, (g, w, h) => {
   g.fillStyle = '#5a3d7a'; g.fillRect(0, 0, w, h); g.fillStyle = '#6d4b8f'; g.fillRect(22, 22, w - 44, h - 44);
   g.strokeStyle = '#d9c9a8'; g.lineWidth = 5; g.strokeRect(12, 12, w - 24, h - 24); g.lineWidth = 2; g.strokeRect(30, 30, w - 60, h - 60);
@@ -573,135 +608,101 @@ const rugT = paint(512, 256, (g, w, h) => {
   for (let i = -h; i < w; i += 36) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.stroke(); g.beginPath(); g.moveTo(i + h, 0); g.lineTo(i, h); g.stroke(); }
   g.restore(); speck(g, w, h, 9000, 0.05);
 });
-rugAt(12.5, 4.6, 3.8, 1.9, rugT);
-{ add(S, RB(1.2, 0.9, 0.4, 0.015), M('#cfc9bd', { roughness: 0.6 }), 14.3, 0.45, 0.28); ob(13.7, 0.05, 14.9, 0.5); add(S, RB(1.24, 0.04, 0.44, 0.01), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), 14.3, 0.92, 0.28); }
-add(S, new THREE.CylinderGeometry(0.55, 0.55, 0.05, 28), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), 11.3, 0.74, 6.6); add(S, new THREE.CylinderGeometry(0.04, 0.04, 0.72, 10), STEEL, 11.3, 0.37, 6.6); ob(10.7, 6.0, 11.9, 7.2);
-chairL(11.3, 5.65, 0, '#6a4c58'); chairL(11.3, 7.5, Math.PI, '#6a4c58');
-plant(14.4, 7.2, 1); lamp(10.55, 0.7, false);
+rugAt(14.4, 4.3, 3.8, 1.9, rugT);
+cabinet(16.1, 0.28, 1.2, '#cfc9bd');
+add(S, new THREE.CylinderGeometry(0.55, 0.55, 0.05, 28), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), 10.8, 0.74, 6.5); add(S, new THREE.CylinderGeometry(0.04, 0.04, 0.72, 10), STEEL, 10.8, 0.37, 6.5); ob(10.2, 5.9, 11.4, 7.1);
+chairL(10.0, 6.5, Math.PI / 2, '#6a4c58'); chairL(11.6, 6.5, -Math.PI / 2, '#6a4c58');
+plant(16.4, 7.2, 1); plant(9.6, 0.9, 0.9); lamp(16.5, 4.6, false);
 
-// =====================================================================
-// RUANG RAPAT (15-26 x 0-8)
-// =====================================================================
+// ---------------------------------------------------------------------
+// RUANG MEETING (17-26 x 0-8)
+// ---------------------------------------------------------------------
 {
   const tw = P('#6d5a4e', { map: WOOD, roughness: 0.4, clearcoat: 0.35, clearcoatRoughness: 0.35 });
-  add(S, RB(5.6, 0.06, 1.5, 0.02), tw, 20.5, 0.74, 3.7); [18.3, 22.7].forEach(x => { add(S, BX(0.08, 0.7, 1.2), STEEL, x, 0.37, 3.7); add(S, BX(0.08, 0.04, 1.3), STEEL, x, 0.02, 3.7); });
-  for (let i = 0; i < 5; i++) { chairL(18.3 + i * 1.1, 2.4, 0, '#33415c'); chairL(18.3 + i * 1.1, 5.0, Math.PI, '#33415c'); }
-  chairL(16.9, 3.7, -Math.PI / 2, '#33415c'); chairL(24.1, 3.7, Math.PI / 2, '#33415c');
-  [[19.3, 3.3, 0.2], [21.8, 4.1, -0.3]].forEach(l => { add(S, RB(0.34, 0.015, 0.24, 0.004), M('#9aa0a8', { metalness: 0.8, roughness: 0.3 }), l[0], 0.78, l[1], { r: [0, l[2], 0] }); add(S, RB(0.34, 0.01, 0.23, 0.004), BLACK, l[0], 0.88, l[1] - 0.12, { r: [-1.2, l[2], 0] }); });
-  add(S, new THREE.CylinderGeometry(0.1, 0.1, 0.02, 20), BLACK, 20.5, 0.78, 3.7); [20.0, 21.0].forEach(x => add(S, new THREE.CylinderGeometry(0.03, 0.025, 0.2, 12), P('#7bbcf0', { roughness: 0.05, transparent: true, opacity: 0.6 }), x, 0.87, 3.4));
-  ob(17.7, 2.9, 23.3, 4.5); ao(20.5, 3.7, 7.4, 3.6, 0.5);
-  const g = new THREE.Group(); g.position.set(20.5, 1.4, 0.03); S.add(g);
+  add(S, RB(5.6, 0.06, 1.5, 0.02), tw, 21.5, 0.74, 3.7); [19.3, 23.7].forEach(x => { add(S, BX(0.08, 0.7, 1.2), STEEL, x, 0.37, 3.7); add(S, BX(0.08, 0.04, 1.3), STEEL, x, 0.02, 3.7); });
+  for (let i = 0; i < 5; i++) { chairL(19.3 + i * 1.1, 2.4, 0, '#33415c'); chairL(19.3 + i * 1.1, 5.0, Math.PI, '#33415c'); }
+  chairL(17.95, 3.7, Math.PI / 2, '#33415c'); chairL(25.05, 3.7, -Math.PI / 2, '#33415c');
+  [[20.3, 3.3, 0.2], [22.8, 4.1, -0.3]].forEach(l => { add(S, RB(0.34, 0.015, 0.24, 0.004), M('#9aa0a8', { metalness: 0.8, roughness: 0.3 }), l[0], 0.78, l[1], { r: [0, l[2], 0] }); add(S, RB(0.34, 0.01, 0.23, 0.004), BLACK, l[0], 0.88, l[1] - 0.12, { r: [-1.2, l[2], 0] }); });
+  add(S, new THREE.CylinderGeometry(0.1, 0.1, 0.02, 20), BLACK, 21.5, 0.78, 3.7); [21.0, 22.0].forEach(x => add(S, new THREE.CylinderGeometry(0.03, 0.025, 0.2, 12), P('#7bbcf0', { roughness: 0.05, transparent: true, opacity: 0.6 }), x, 0.87, 3.4));
+  ob(18.7, 2.9, 24.3, 4.5); ao(21.5, 3.7, 7.4, 3.6, 0.5);
+  const g = new THREE.Group(); g.position.set(21.5, 1.4, 0.03); S.add(g);
   add(g, RB(2.1, 1.2, 0.05, 0.01), BLACK, 0, 0, 0); add(g, new THREE.PlaneGeometry(2.0, 1.1), mkScreen('meet', null), 0, 0, 0.027, { nocast: true });
-  plant(25.2, 0.9, 1); plant(25.2, 7.2, 1); plant(15.8, 0.8, 0.9); lamp(25.2, 4, false);
+  plant(25.2, 0.9, 1); plant(25.2, 7.2, 1); plant(17.8, 0.8, 0.9); lamp(25.4, 4.2, false);
 }
 
-// =====================================================================
+// ---------------------------------------------------------------------
 // KORIDOR (0-26 x 8-10)
-// =====================================================================
+// ---------------------------------------------------------------------
 {
   const yl = M('#e5b800', { roughness: 0.6 });
   [8.4, 9.6].forEach(z => { const m = new THREE.Mesh(new THREE.PlaneGeometry(NX - 0.4, 0.08), yl); m.rotation.x = -Math.PI / 2; m.position.set(NX / 2, 0.011, z); S.add(m); });
   plant(0.8, 9.0, 0.9); plant(25.2, 9.0, 0.9); dispenser(1.6, 9.3);
-  extinguisher(6.2, 8.2, 0); extinguisher(15.8, 9.8, Math.PI); extinguisher(21.2, 8.2, 0);
+  extinguisher(7.4, 8.2, 0); extinguisher(15.0, 9.8, Math.PI); extinguisher(19.4, 8.2, 0);
   add(S, BX(0.7, 0.2, 0.04), new THREE.MeshStandardMaterial({ color: '#0d6b3a', emissive: '#18e07a', emissiveIntensity: 1.2 }), 25.3, 2.45, 8.07, { nocast: true });
 }
 
-// =====================================================================
-// LOBBY (0-7 x 10-16)
-// =====================================================================
+// ---------------------------------------------------------------------
+// RUANG OPERATION CONTROL (0-7 x 10-16)
+// ---------------------------------------------------------------------
 {
-  const logoT = paint(512, 128, (g, w, h) => { g.fillStyle = '#12233d'; g.fillRect(0, 0, w, h); g.fillStyle = '#f2b705'; g.fillRect(0, 0, 18, h); g.fillStyle = '#fff'; g.font = 'bold 40px sans-serif'; g.fillText('JDC', 40, 56); g.font = '24px sans-serif'; g.fillText('DISTRIBUTION CENTER', 40, 94); });
-  add(S, RB(3.2, 1.05, 0.7, 0.02), M('#e9e6df', { roughness: 0.35 }), 3.2, 0.53, 12.45); add(S, RB(3.4, 0.05, 0.9, 0.015), P('#2a2a2e', { roughness: 0.12, clearcoat: 1 }), 3.2, 1.07, 12.45);
-  add(S, new THREE.PlaneGeometry(2.4, 0.6), glow(2.4, 0.6, logoT), 3.2, 0.55, 12.81, { nocast: true });
-  monitor(S, 3.2, 1.1, 12.3, mkScreen('code', 'resepsionis'), Math.PI, 0.8);
-  ob(1.5, 12.0, 4.9, 12.9); SEAT.resepsionis = [3.2, 11.55]; chair(SEAT.resepsionis, 0);
-  const lr = paint(256, 128, (g, w, h) => { g.fillStyle = '#1f3a5f'; g.fillRect(0, 0, w, h); g.strokeStyle = '#f2b705'; g.lineWidth = 4; g.strokeRect(10, 10, w - 20, h - 20); speck(g, w, h, 5000, 0.06); });
-  rugAt(3.3, 14.4, 3.2, 1.7, lr);
-  sofa(0.15, 15.9, Math.PI / 2, '#2f4a6b', '#26405e'); ob(0.05, 13.4, 1.15, 15.95);
-  add(S, new THREE.CylinderGeometry(0.4, 0.4, 0.04, 28), P('#d8d2c4', { roughness: 0.2, clearcoat: 0.6 }), 1.9, 0.42, 14.6); add(S, new THREE.CylinderGeometry(0.05, 0.05, 0.4, 10), STEEL, 1.9, 0.2, 14.6); ob(1.5, 14.2, 2.3, 15.0);
-  plant(6.3, 10.8, 1); plant(6.3, 15.3, 1); plant(0.7, 10.8, 0.9);
-  ao(3.2, 12.5, 4.2, 1.8, 0.5);
-}
-
-// =====================================================================
-// PANTRY & LOUNGE (7-14 x 10-16)
-// =====================================================================
-{
-  const g = new THREE.Group(); g.position.set(11.4, 0, 10.15); S.add(g);
-  add(g, RB(2.4, 0.86, 0.9, 0.01), M('#3b3f46', { roughness: 0.55 }), 1.2, 0.43, 0.45);
-  [0, 1, 2, 3].forEach(i => [0.0, 0.9].forEach(z => add(g, RB(0.56, 0.74, 0.012, 0.005), M('#4b505a', { roughness: 0.45 }), 0.32 + i * 0.58, 0.43, z + (z ? 0.006 : -0.006))));
-  add(g, RB(2.46, 0.04, 0.96, 0.01), P('#e8e6df', { roughness: 0.25, clearcoat: 0.5 }), 1.2, 0.88, 0.45);
-  add(g, RB(0.34, 0.36, 0.3, 0.02), M('#1c1e23', { roughness: 0.4 }), 0.5, 1.08, 0.5); add(g, BX(0.3, 0.02, 0.26), STEEL, 0.5, 0.9, 0.5);
-  add(g, new THREE.CylinderGeometry(0.035, 0.03, 0.08, 12), M('#f2f0ea', { roughness: 0.3 }), 0.5, 0.94, 0.55);
-  add(g, new THREE.CylinderGeometry(0.1, 0.12, 0.2, 16), STEEL, 1.5, 0.99, 0.5);
-  [1.9, 2.0].forEach((x, i) => add(g, new THREE.CylinderGeometry(0.035, 0.03, 0.08, 12), M(i ? '#2980b9' : '#f2f0ea', { roughness: 0.3 }), x, 0.94, 0.6));
-  ob(11.4, 10.15, 13.8, 11.05); ao(12.6, 10.7, 3.2, 1.6, 0.5);
-  add(S, RB(0.8, 1.85, 0.7, 0.03), M('#dfe3e8', { roughness: 0.3, metalness: 0.2 }), 7.5, 0.93, 10.5); add(S, BX(0.03, 0.4, 0.03), STEEL, 7.2, 1.2, 10.87);
-  const vt = paint(128, 256, (c, w, h) => { c.fillStyle = '#10151c'; c.fillRect(0, 0, w, h); const cl = ['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#ecf0f1']; for (let r = 0; r < 5; r++) for (let q = 0; q < 4; q++) { c.fillStyle = cl[(r + q) % 5]; c.fillRect(8 + q * 29, 10 + r * 40, 22, 30); } });
-  add(S, RB(0.9, 1.9, 0.75, 0.03), M('#b02a22', { roughness: 0.4 }), 8.5, 0.95, 10.5); add(S, new THREE.PlaneGeometry(0.62, 1.4), glow(0.62, 1.4, vt), 8.45, 1.1, 10.89, { nocast: true });
-  ob(7.1, 10.1, 9.0, 10.95); ao(8.1, 10.6, 2.4, 1.4, 0.5);
-  const tp = P('#d8d2c4', { roughness: 0.3, clearcoat: 0.5 });
-  add(S, new THREE.CylinderGeometry(0.75, 0.75, 0.05, 32), tp, 12.3, 0.75, 13.5); add(S, new THREE.CylinderGeometry(0.05, 0.05, 0.72, 10), STEEL, 12.3, 0.37, 13.5); add(S, new THREE.CylinderGeometry(0.3, 0.3, 0.03, 20), PLASTIC, 12.3, 0.02, 13.5); ob(11.55, 12.75, 13.05, 14.25);
-  [[12.3, 12.55, 0], [12.3, 14.45, Math.PI], [11.35, 13.5, Math.PI / 2], [13.25, 13.5, -Math.PI / 2]].forEach(c => chairL(c[0], c[1], c[2], '#c4572e'));
-  sofa(7.6, 14.2, 0, '#3f7d6b', '#336657'); ob(7.5, 14.1, 10.1, 15.2);
-  add(S, RB(1.2, 0.05, 0.6, 0.015), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), 8.8, 0.4, 15.7); [[8.3, 15.5], [9.3, 15.5], [8.3, 15.9], [9.3, 15.9]].forEach(p => add(S, BX(0.04, 0.38, 0.04), STEEL, p[0], 0.19, p[1]));
-  lamp(10.5, 14.6, true); plant(13.4, 15.3, 1); plant(7.4, 12.5, 0.9);
-}
-
-// =====================================================================
-// KONTROL GUDANG (14-20 x 10-16)
-// =====================================================================
-{
-  SEAT.op1 = desk(15.0, 12.2, 1.9, 1.0, '#9aa3ad', 'code', 'op1', Math.PI); SEAT.op2 = desk(17.4, 12.2, 1.9, 1.0, '#9aa3ad', 'code', 'op2', Math.PI);
-  FACE.op1 = FACE.op2 = Math.PI; chair(SEAT.op1, Math.PI); chair(SEAT.op2, Math.PI);
-  const vw = new THREE.Group(); vw.position.set(17, 1.82, 10.12); S.add(vw);
+  SEAT.op_control = desk(0.8, 12.1, 1.6, 1.0, '#9aa3ad', 'code', 'op_control', Math.PI); SEAT.op1 = desk(3.5, 12.1, 1.6, 1.0, '#9aa3ad', 'code', 'op1', Math.PI);
+  FACE.op_control = FACE.op1 = Math.PI; chair(SEAT.op_control, Math.PI); chair(SEAT.op1, Math.PI);
+  const vw = new THREE.Group(); vw.position.set(3.2, 1.82, 10.12); S.add(vw);
   add(vw, RB(4.8, 0.82, 0.05, 0.01), BLACK, 0, 0, 0);
   for (let i = 0; i < 4; i++) add(vw, new THREE.PlaneGeometry(1.12, 0.7), mkScreen('wall', null), -1.77 + i * 1.18, 0, 0.028, { nocast: true });
   add(vw, BX(4.8, 0.06, 0.1), STEEL, 0, -0.46, 0.04);
   const mapT = paint(512, 256, (g, w, h) => { g.fillStyle = '#e9e4d8'; g.fillRect(0, 0, w, h); g.strokeStyle = '#a89f8c'; g.lineWidth = 2; for (let i = 0; i < 16; i++) g.strokeRect(20 + (i % 8) * 58, 30 + (i >> 3) * 100, 50, 80); g.fillStyle = '#1f3a5f'; g.font = 'bold 20px sans-serif'; g.fillText('DENAH GUDANG WH-01', 20, 22); });
-  const mp = new THREE.Group(); mp.position.set(14.3, 1.5, 13.2); mp.rotation.y = Math.PI / 2; S.add(mp);
-  add(mp, RB(1.3, 0.7, 0.03, 0.01), STEEL, 0, 0, 0); add(mp, new THREE.PlaneGeometry(1.22, 0.62), M('#ffffff', { map: mapT, roughness: 0.4 }), 0, 0, 0.02, { nocast: true });
-  plant(19.3, 15.3, 1); plant(14.7, 15.4, 0.9); extinguisher(19.6, 10.3, 0);
+  const mp = new THREE.Group(); mp.position.set(6.9, 1.5, 11.6); mp.rotation.y = -Math.PI / 2; S.add(mp);
+  add(mp, RB(1.5, 0.8, 0.03, 0.01), STEEL, 0, 0, 0); add(mp, new THREE.PlaneGeometry(1.42, 0.72), M('#ffffff', { map: mapT, roughness: 0.4 }), 0, 0, 0.02, { nocast: true });
+  plant(6.4, 15.3, 1); plant(0.6, 10.9, 0.9); extinguisher(0.7, 15.6, 0);
 }
 
-// =====================================================================
-// RUANG SERVER (20-26 x 10-13) & ARSIP (20-26 x 13-16)
-// =====================================================================
+// ---------------------------------------------------------------------
+// RUANG ASSET MANAGEMENT (7-14 x 10-16)
+// ---------------------------------------------------------------------
+{
+  SEAT.asset = desk(8.0, 11.9, 1.9, 1.0, '#a58a63', 'code', 'asset', Math.PI); FACE.asset = Math.PI; chair(SEAT.asset, Math.PI);
+  palletRack(8.0, 15.0, 5.2);
+  crateStack(12.8, 11.3);
+  cabinet(8.2, 10.35, 1.2, '#b9bfc6');
+  signBoard(7.1, 1.7, 11.0, 1.5, 0.95, Math.PI / 2, 'ASSET REGISTER', ['Forklift & alat berat', 'Rak & pallet', 'Perangkat & inventaris'], '#1f6f8b');
+  plant(13.55, 10.6, 0.9);
+  add(S, RB(1.0, 0.05, 0.6, 0.015), P('#8a6b5a', { map: WOOD, roughness: 0.4 }), 11.0, 0.78, 14.0); [[10.55, 13.75], [11.45, 13.75], [10.55, 14.25], [11.45, 14.25]].forEach(p => add(S, BX(0.04, 0.76, 0.04), STEEL, p[0], 0.38, p[1]));
+  ob(10.5, 13.7, 11.5, 14.3);
+}
+
+// ---------------------------------------------------------------------
+// RUANG HSE (14-20 x 10-16)
+// ---------------------------------------------------------------------
+{
+  SEAT.hse = desk(14.7, 11.8, 1.7, 1.0, '#b08a55', 'code', 'hse', Math.PI); FACE.hse = Math.PI; chair(SEAT.hse, Math.PI);
+  const lk = M('#e8751a', { roughness: 0.45, metalness: 0.3 });
+  for (let i = 0; i < 5; i++) { add(S, RB(0.48, 1.8, 0.42, 0.015), lk, 14.75 + i * 0.5, 0.9, 15.7); add(S, BX(0.3, 0.02, 0.02), STEEL, 14.75 + i * 0.5, 1.2, 15.48); }
+  ob(14.45, 15.3, 17.3, 15.95); ao(15.9, 15.6, 3.2, 1.2, 0.5);
+  add(S, new THREE.CylinderGeometry(0.6, 0.6, 0.05, 28), P('#d8d2c4', { roughness: 0.3, clearcoat: 0.5 }), 18.3, 0.74, 14.0); add(S, new THREE.CylinderGeometry(0.04, 0.04, 0.72, 10), STEEL, 18.3, 0.37, 14.0); ob(17.65, 13.35, 18.95, 14.65);
+  chairL(18.3, 13.1, 0, '#c4572e'); chairL(17.45, 14.0, Math.PI / 2, '#c4572e'); chairL(19.15, 14.0, -Math.PI / 2, '#c4572e');
+  for (let i = 0; i < 3; i++) add(S, new THREE.SphereGeometry(0.11, 14, 10, 0, 6.283, 0, 1.57), M(['#ffffff', '#f2c200', '#e8751a'][i], { roughness: 0.4 }), 18.0 + i * 0.3, 0.77, 13.95);
+  signBoard(19.9, 1.7, 13.25, 1.3, 0.9, -Math.PI / 2, 'ZERO ACCIDENT', ['APD wajib', 'Lapor near miss', 'Jalur evakuasi'], '#d9541e');
+  add(S, BX(0.04, 0.4, 0.4), M('#f4f4f0', { roughness: 0.5 }), 14.12, 1.4, 11.0); add(S, BX(0.045, 0.22, 0.06), M('#c0261e'), 14.14, 1.4, 11.0); add(S, BX(0.045, 0.06, 0.22), M('#c0261e'), 14.14, 1.4, 11.0);
+  extinguisher(19.6, 10.35, 0); plant(19.4, 15.4, 0.9);
+}
+
+// ---------------------------------------------------------------------
+// RUANG SERVER (20-26 x 10-16)
+// ---------------------------------------------------------------------
 const LEDT = paint(64, 128, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (let r = 0; r < 14; r++) for (let c = 0; c < 5; c++) if (rnd() < 0.8) { g.fillStyle = rnd() < 0.7 ? '#19ff7a' : rnd() < 0.5 ? '#ffb020' : '#3aa0ff'; g.fillRect(6 + c * 11, 6 + r * 8.6, 5, 4); } });
 const LEDM = new THREE.MeshStandardMaterial({ color: '#0d0f12', emissive: '#ffffff', emissiveMap: LEDT, emissiveIntensity: 1, roughness: 0.6 });
-for (let i = 0; i < 6; i++) {
-  const x = 20.65 + i * 0.9;
-  add(S, RB(0.72, 2.1, 0.95, 0.02), M('#16181c', { roughness: 0.45, metalness: 0.4 }), x, 1.05, 10.8);
-  add(S, new THREE.PlaneGeometry(0.6, 1.9), LEDM, x, 1.05, 11.285, { nocast: true });
-  add(S, BX(0.02, 1.9, 0.02), STEEL, x + 0.33, 1.05, 11.29);
+function rack(x, z, ry) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; S.add(g);
+  add(g, RB(0.72, 2.1, 0.95, 0.02), M('#16181c', { roughness: 0.45, metalness: 0.4 }), 0, 1.05, 0);
+  add(g, new THREE.PlaneGeometry(0.6, 1.9), LEDM, 0, 1.05, 0.485, { nocast: true });
+  add(g, BX(0.02, 1.9, 0.02), STEEL, 0.33, 1.05, 0.49);
 }
-ob(20.2, 10.3, 25.9, 11.4); ao(23, 11.0, 6.2, 1.8, 0.5);
-add(S, RB(1.0, 1.9, 0.7, 0.03), M('#dfe3e8', { roughness: 0.35 }), 25.2, 0.95, 12.3); ob(24.6, 11.9, 25.9, 12.7); // unit pendingin
-{
-  const g = new THREE.Group(); g.position.set(20.4, 0, 13.1); S.add(g);
-  const og = M('#e8751a', { roughness: 0.5, metalness: 0.4 }), bl = M('#1f5fa8', { roughness: 0.5, metalness: 0.4 }), slat = M('#a58a63', { roughness: 0.8 });
-  const bays = 3, bw = 5.2 / bays;
-  for (let i = 0; i <= bays; i++) [0, 0.9].forEach(zz => add(g, BX(0.07, 2.6, 0.07), og, i * bw, 1.3, zz + 0.035));
-  const ys = [0.35, 1.2, 2.05], im = new THREE.InstancedMesh(BX(1, 1, 1), M('#ffffff', { roughness: 0.85 }), 60), o = new THREE.Object3D(); let n = 0;
-  for (let b = 0; b < bays; b++) ys.forEach(y => {
-    [0.03, 0.87].forEach(zz => add(g, BX(bw, 0.1, 0.05), bl, b * bw + bw / 2, y, zz)); add(g, BX(bw - 0.1, 0.025, 0.8), slat, b * bw + bw / 2, y + 0.06, 0.45);
-    for (let k = 0; k < 3 && n < 60; k++) { const w = 0.35 + rnd() * 0.15, h = 0.3 + rnd() * 0.25; o.position.set(b * bw + 0.3 + k * (bw - 0.5) / 3 + 0.1, y + 0.07 + h / 2, 0.45); o.scale.set(w, h, 0.5 + rnd() * 0.2); o.rotation.set(0, 0, 0); o.updateMatrix(); im.setMatrixAt(n, o.matrix); im.setColorAt(n, new THREE.Color('#b08a55').multiplyScalar(0.8 + rnd() * 0.35)); n++; }
-  });
-  im.count = n; im.castShadow = true; im.receiveShadow = true; g.add(im); ob(20.3, 13.1, 25.7, 14.05); ao(23, 13.6, 6.2, 1.8, 0.5);
-}
-function forklift(x, z, ry) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry || 0; S.add(g); const ye = M('#f2b705', { roughness: 0.45, metalness: 0.2 });
-  add(g, RB(1.1, 0.7, 1.7, 0.08), ye, 0, 0.55, -0.1); add(g, RB(1.0, 0.45, 0.5, 0.06), M('#2a2d33', { roughness: 0.5 }), 0, 0.5, -0.9);
-  [[-0.5, -0.45], [0.5, -0.45], [-0.5, 0.4], [0.5, 0.4]].forEach(p => add(g, BX(0.05, 1.3, 0.05), BLACK, p[0], 1.45, p[1]));
-  add(g, RB(1.1, 0.05, 0.95, 0.01), BLACK, 0, 2.1, 0); add(g, RB(0.45, 0.1, 0.4, 0.03), BLACK, 0, 0.95, -0.2); add(g, RB(0.45, 0.4, 0.07, 0.03), BLACK, 0, 1.2, -0.42);
-  [-0.35, 0.35].forEach(q => { add(g, BX(0.07, 2.1, 0.07), STEEL, q, 1.1, 0.85); add(g, BX(0.1, 0.05, 1.2), STEEL, q * 0.8, 0.15, 1.45); });
-  add(g, BX(0.9, 0.45, 0.05), STEEL, 0, 0.4, 0.88);
-  [[-0.5, 0.65, 0.3], [0.5, 0.65, 0.3], [-0.5, -0.7, 0.26], [0.5, -0.7, 0.26]].forEach(w => add(g, new THREE.CylinderGeometry(w[2], w[2], 0.2, 18), BLACK, w[0], w[2], w[1], { r: [0, 0, Math.PI / 2] }));
-  add(g, new THREE.CylinderGeometry(0.06, 0.06, 0.1, 10), new THREE.MeshStandardMaterial({ color: '#ff8a00', emissive: '#ff8a00', emissiveIntensity: 1.5 }), 0.4, 2.18, -0.3);
-  ob(x - 0.7, z - 1.2, x + 0.7, z + 2.0); ao(x, z + 0.4, 2.2, 3.4, 0.5);
-}
-forklift(23.2, 14.2, 0);
-{ const pc = M('#a58a63', { roughness: 0.8 }); add(S, BX(1.0, 0.12, 1.0), M('#8a6a4a', { roughness: 0.8 }), 25.1, 0.06, 15.0); add(S, BX(0.8, 0.5, 0.8), pc, 25.1, 0.37, 15.0); add(S, BX(0.7, 0.4, 0.7), pc, 25.1, 0.82, 15.0); ob(24.5, 14.4, 25.7, 15.6); }
+[20.85, 21.7, 23.9, 24.75].forEach(x => rack(x, 10.8, 0));
+ob(20.45, 10.3, 22.1, 11.3); ob(23.5, 10.3, 25.15, 11.3);
+[20.9, 21.8, 22.7, 23.6, 24.5].forEach(x => rack(x, 15.0, Math.PI));
+ob(20.5, 14.5, 24.9, 15.5); ao(22.7, 15.0, 5.2, 1.8, 0.5); ao(22.8, 10.8, 5.6, 1.8, 0.5);
+add(S, RB(1.0, 1.9, 0.7, 0.03), M('#dfe3e8', { roughness: 0.35 }), 25.3, 0.95, 13.0); ob(24.75, 12.6, 25.9, 13.4); // unit pendingin
 
 // =====================================================================
 // AREA PARKIR (di depan gedung)
@@ -763,7 +764,7 @@ function car(x, z, col, ry) {
   };
   [1, 13, 25, 37, -11].forEach(x => post(x, 22.5));
 }
-const ROOMS = [['RUANG KERJA', 5, 0.4, 2.7], ['RUANG SUPERVISOR', 12.5, 0.4, 2.7], ['RUANG RAPAT', 20.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['LOBBY', 3.5, 10.4, 2.7], ['PANTRY & LOUNGE', 10.5, 10.4, 2.7], ['KONTROL GUDANG', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7], ['ARSIP & GUDANG', 23, 13.4, 2.7], ['AREA PARKIR', 13, 16.6, 0.3]];
+const ROOMS = [['RUANG HRD', 4.5, 0.4, 2.7], ['RUANG MANAGER OPERATION', 13, 0.4, 2.7], ['RUANG MEETING', 21.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['RUANG OPERATION CONTROL', 3.5, 10.4, 2.7], ['RUANG ASSET MANAGEMENT', 10.5, 10.4, 2.7], ['RUANG HSE', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7], ['AREA PARKIR', 13, 16.6, 0.3]];
 
 // =====================================================================
 // Karakter manusia (humanoid prosedural, PBR)
@@ -771,7 +772,8 @@ const ROOMS = [['RUANG KERJA', 5, 0.4, 2.7], ['RUANG SUPERVISOR', 12.5, 0.4, 2.7
 const LOOK = {
   hrd: { female: true, skin: '#e8b894', hair: '#2a1a14', shirt: '#e0568a', pants: '#2b2f3f', sleeve: 'short' },
   manager_ops: { female: false, skin: '#d9a47c', hair: '#161616', shirt: '#2f6fd1', pants: '#2b3350', tie: '#b3261e', glasses: true, sleeve: 'long' },
-  resepsionis: { female: true, skin: '#e6b48f', hair: '#2a1a14', shirt: '#1f3a5f', pants: '#2b2f3f', sleeve: 'long' },
+  asset: { female: true, skin: '#e6b48f', hair: '#2a1a14', shirt: '#1f6f8b', pants: '#2b2f3f', sleeve: 'long' },
+  hse: { female: false, skin: '#c68e65', hair: '#1c1c1c', shirt: '#e8751a', pants: '#2b3350', vest: true, hat: '#ffffff', sleeve: 'long' },
   op1: { female: false, skin: '#c68e65', hair: '#1c1c1c', shirt: '#3d4b5c', pants: '#2b3350', glasses: true, sleeve: 'long' },
   op2: { female: true, skin: '#e0b08a', hair: '#3a2a1a', shirt: '#7a5ccf', pants: '#2b2f3f', sleeve: 'short' },
   satpam: { female: false, skin: '#a9754f', hair: '#111111', shirt: '#22304a', pants: '#1b2233', hat: '#1c2740', sleeve: 'long' },
@@ -862,10 +864,10 @@ function makePerson(look) {
 // =====================================================================
 // Pergerakan agent (lewat pintu, menghindari perabot dan partisi)
 // =====================================================================
-const WAIT = [[11.7, 4.3], [12.6, 4.7], [13.5, 4.3]];
-const IDLE = [[12.6, 11.9], [8.4, 12.9], [12.0, 15.3], [3.6, 14.8], [16.6, 6.3], [21.5, 9.0], [17.5, 15.2], [5.5, 9.0], [12.6, 6.9], [22.5, 6.2], [2.2, 9.0], [9.5, 6.2]];
-const PAT = [[22, 9], [3, 9], [3.6, 14.8], [10, 13.5], [16.5, 9], [12.5, 9]];
-const WAN2 = [[12.6, 11.9], [8.4, 12.9], [21, 6.4], [12.0, 15.3]];
+const WAIT = [[13.3, 3.7], [14.4, 4.0], [15.5, 3.7]];
+const IDLE = [[12.6, 9.0], [4.6, 9.0], [21.0, 9.0], [8.2, 9.0], [17.0, 9.0], [2.6, 6.4], [4.0, 6.2], [13.0, 6.6], [22.5, 6.4], [9.6, 14.3], [17.0, 14.2], [23.2, 13.0], [2.6, 14.9], [6.0, 8.8]];
+const PAT = [[22, 9], [12.5, 9], [3, 9], [8, 9], [17, 9]];
+const WAN2 = [[12.6, 9.0], [21, 6.4], [3.0, 9.0], [23.2, 13.0], [9.6, 14.3]];
 function hit(ax, ay, bx, by, r, m) {
   const x0 = r[0] - m, y0 = r[1] - m, x1 = r[2] + m, y1 = r[3] + m, dx = bx - ax, dy = by - ay;
   const p = [-dx, dx, -dy, dy], q = [ax - x0, x1 - ax, ay - y0, y1 - ay]; let t0 = 0, t1 = 1;
@@ -923,10 +925,10 @@ function person(o) {
   c.rig = makePerson(o.look); c.q = newState(false); return c;
 }
 const chars = D.agents.map((a, i) => {
-  const c = person(Object.assign({}, a, { id: a.kunci, idx: i, seed: i * 2.1, look: LOOK[a.kunci] || FALL[i % FALL.length] }));
+  const c = person(Object.assign({}, a, { id: a.kunci, idx: i, seed: i * 2.1, look: LOOK[a.kunci] || FALL[i % FALL.length], face: FACE[a.kunci] || 0 }));
   const s = seatOf(c);
   if (saved[a.kunci]) { c.x = saved[a.kunci][0]; c.y = saved[a.kunci][1]; }
-  else if (working(c)) { c.x = s[0]; c.y = s[1]; c.q.sit = 1; c.sitting = true; }
+  else if (working(c)) { c.x = s[0]; c.y = s[1]; c.q.sit = 1; c.sitting = true; c.h = c.hT = c.face; }
   else if (waiting(c)) { const w = WAIT[i % WAIT.length]; c.x = w[0]; c.y = w[1]; c.hT = c.h = Math.PI; }
   else { const p = IDLE[(i * 2 + 1) % IDLE.length]; c.x = p[0]; c.y = p[1]; }
   pickTarget(c);
@@ -937,7 +939,7 @@ const chars = D.agents.map((a, i) => {
 const npcs = [];
 function npcSit(id, seat, face) { const c = person({ id, kunci: id, look: LOOK[id], npc: true, fixed: true, typing: true, face }); c.x = c.tx = seat[0]; c.y = c.ty = seat[1]; c.sitting = true; c.q.sit = 1; c.h = c.hT = face; npcs.push(c); }
 function npcWalk(id, pts, i0) { const c = person({ id, kunci: id, look: LOOK[id], npc: true, pts, idx: i0 }); const p = pts[i0 % pts.length]; c.x = p[0]; c.y = p[1]; pickIdle(c); c.blob = ao(c.x, c.y, 0.8, 0.8, 0.55); c.blob.removeFromParent(); scene.add(c.blob); npcs.push(c); }
-npcSit('staf1', SEAT.staf1, 0); npcSit('resepsionis', SEAT.resepsionis, 0); npcSit('op1', SEAT.op1, FACE.op1); npcSit('op2', SEAT.op2, FACE.op2);
+npcSit('staf1', SEAT.staf1, 0); npcSit('asset', SEAT.asset, FACE.asset); npcSit('hse', SEAT.hse, FACE.hse); npcSit('op1', SEAT.op1, FACE.op1);
 npcWalk('satpam', PAT, 0); npcWalk('staf2', WAN2, 1);
 const kamu = { id: 'kamu', kunci: 'kamu', nama: SUP, peran: 'Supervisor', status: 'idle', npc: false, fixed: true, x: SUP_SEAT[0], y: SUP_SEAT[1], h: 0, hT: 0, face: 0, sitting: true, walking: false, seed: 1.3, rig: makePerson(LOOK.kamu), q: newState(true) };
 const people = chars.concat(npcs, [kamu]);
