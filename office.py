@@ -143,7 +143,16 @@ camera.position.copy(HOME.p);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.t);
 controls.enableDamping = true; controls.dampingFactor = 0.08;
-controls.zoomSpeed = 0.35; controls.minDistance = 6; controls.maxDistance = 95;
+controls.minDistance = 6; controls.maxDistance = 95;
+// zoom roda mouse: langkah tetap kecil per "klik", tidak peduli seberapa besar delta dari mouse/trackpad
+controls.enableZoom = false;
+{ let lastW = 0;
+  renderer.domElement.addEventListener('wheel', e => {
+    e.preventDefault(); const now = performance.now(); if (now - lastW < 70) return; lastW = now;
+    const off = camera.position.clone().sub(controls.target), d = off.length(), k = e.deltaY > 0 ? 1.07 : 1 / 1.07;
+    off.setLength(Math.min(controls.maxDistance, Math.max(controls.minDistance, d * k))); camera.position.copy(controls.target).add(off);
+  }, { passive: false });
+}
 controls.minPolarAngle = 0.15; controls.maxPolarAngle = 1.5;
 controls.minAzimuthAngle = -0.2; controls.maxAzimuthAngle = Math.PI / 2 + 0.2;
 controls.update();
