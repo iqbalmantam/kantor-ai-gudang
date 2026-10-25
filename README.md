@@ -1,6 +1,6 @@
 # Kantor AI Gudang
 
-Pusat kendali operasional gudang **JDC Distribution Center** dengan agent AI (Regita – HRD, Tris – Manager Operation, Yogi – Operation Control).
+Pusat kendali operasional gudang **JDC Distribution Center** dengan agent AI (Regita – HRD, Yogi – Operation Control, Zakhwan – Admin Control).
 
 ## Fitur
 - **Dashboard**: KPI, komposisi status, beban kerja per agent, tren harian, kartu yang butuh jawabanmu, feed aktivitas.

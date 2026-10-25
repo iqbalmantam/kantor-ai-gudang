@@ -197,8 +197,8 @@ TEMPLATE = {
     "— pilih template —": None,
     "📋 Cek absensi hari ini": ("Rekap absensi harian", "Mohon rekap kehadiran, keterlambatan, dan karyawan yang belum masuk hari ini.", "hrd", "normal"),
     "👷 Kebutuhan manpower inbound": ("Kebutuhan manpower bongkar muat", "Perkirakan kebutuhan tenaga kerja untuk bongkar muat inbound besok pagi dan beri rekomendasi lembur bila perlu.", "hrd", "tinggi"),
-    "🎯 Target & KPI mingguan": ("Review target dan KPI mingguan", "Tinjau capaian KPI gudang minggu ini dan tentukan prioritas perbaikan.", "manager_ops", "normal"),
-    "🚨 Eskalasi keterlambatan kirim": ("Eskalasi keterlambatan pengiriman", "Ada pengiriman terlambat ke pelanggan. Tentukan langkah eskalasi dan prioritas penanganan.", "manager_ops", "urgent"),
+    "🗂️ Rekap laporan harian": ("Rekap laporan operasional harian", "Susun rekap laporan operasional harian (inbound, outbound, kendala) dari data yang tersedia dan siapkan untuk diarsipkan.", "admin_control", "normal"),
+    "📄 Cek kelengkapan dokumen": ("Cek kelengkapan dokumen pengiriman", "Periksa kelengkapan DO/surat jalan/BAST pengiriman hari ini dan catat dokumen yang masih kurang.", "admin_control", "tinggi"),
     "📦 Pantau antrean picking": ("Pantau antrean picking & packing", "Cek antrean kerja picking/packing saat ini dan laporkan hambatan produktivitas.", "op_control", "tinggi"),
     "🔍 Laporan temuan lapangan": ("Laporan temuan lapangan harian", "Susun ringkasan temuan lapangan hari ini (keselamatan, kerusakan barang, selisih stok).", "op_control", "normal"),
 }
@@ -558,7 +558,7 @@ with tab_kantor:
         H(
             """
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <span class="tag">Ruang HRD</span><span class="tag">Ruang Manager Operation</span><span class="tag">Ruang Operation Control</span>
+            <span class="tag">Ruang HRD</span><span class="tag">Ruang Admin Control</span><span class="tag">Ruang Operation Control</span>
             <span class="tag">Ruang Asset Management</span><span class="tag">Ruang HSE</span><span class="tag">Ruang Server</span>
             <span class="tag">Ruang Meeting</span><span class="tag">Area Parkir</span>
             </div>
@@ -727,7 +727,7 @@ with tab_fitur:
     FITUR = [
         ("🏢", "Simulasi kantor 3D", "Denah WebGL dengan agent yang berjalan, duduk, dan melambai sesuai status kartu.", "Aktif"),
         ("📋", "Papan kartu & filter", "Kanban 4 kolom dengan pencarian, filter agent/prioritas, dan penutupan manual.", "Aktif"),
-        ("⚡", "Template tugas cepat", "Satu klik membuat tugas rutin: absensi, manpower, KPI, eskalasi, antrean picking.", "Aktif"),
+        ("⚡", "Template tugas cepat", "Satu klik membuat tugas rutin: absensi, manpower, laporan harian, dokumen, antrean picking.", "Aktif"),
         ("📊", "Dashboard & grafik", "KPI, komposisi status, beban kerja per agent, dan tren harian.", "Aktif"),
         ("🔁", "Estafet antar agent", "Agent menyerahkan tugas ke rekan yang tepat dengan batas anti-looping.", "Aktif"),
         ("📑", "Ekspor laporan CSV", "Unduh kartu dan percakapan untuk dianalisis di Excel atau BI.", "Aktif"),

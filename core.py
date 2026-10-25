@@ -48,6 +48,7 @@ def init_db():
         kolom = [r["name"] for r in c.execute("PRAGMA table_info(kartu)").fetchall()]
         if "prioritas" not in kolom:
             c.execute("ALTER TABLE kartu ADD COLUMN prioritas TEXT NOT NULL DEFAULT 'normal'")
+        c.execute("UPDATE kartu SET agent='admin_control' WHERE agent='manager_ops'")  # migrasi nama lama
         c.execute(
             """CREATE TABLE IF NOT EXISTS pesan (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

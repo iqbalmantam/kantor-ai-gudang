@@ -27,14 +27,6 @@ AGENTS = {
         "warna": "#f472b6",
         "keahlian": ["Absensi", "Manpower", "Cuti & Lembur", "Rekrutmen"],
     },
-    "manager_ops": {
-        "nama": "Tris",
-        "peran": "Manager Operation",
-        "gender": "pria",
-        "tugas": "Memimpin operasional gudang, memutuskan prioritas, menyetujui eskalasi, target dan KPI.",
-        "warna": "#38bdf8",
-        "keahlian": ["Prioritas", "Eskalasi", "Target & KPI", "Strategi"],
-    },
     "op_control": {
         "nama": "Yogi",
         "peran": "Operation Control",
@@ -42,6 +34,14 @@ AGENTS = {
         "tugas": "Memantau jalannya operasional harian, produktivitas, antrean kerja, dan temuan lapangan.",
         "warna": "#fbbf24",
         "keahlian": ["Produktivitas", "Antrean kerja", "Temuan lapangan", "Monitoring"],
+    },
+    "admin_control": {
+        "nama": "Zakhwan",
+        "peran": "Admin Control",
+        "gender": "pria",
+        "tugas": "Administrasi operasional: rekap dan input data, dokumen (DO/SJ/BAST), laporan harian, pengarsipan, dan follow-up kelengkapan data. Bukan pengambil keputusan; keputusan/persetujuan diminta dari supervisor.",
+        "warna": "#38bdf8",
+        "keahlian": ["Rekap data", "Dokumen", "Laporan harian", "Pengarsipan"],
     },
 }
 

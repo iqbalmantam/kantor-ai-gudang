@@ -1,6 +1,6 @@
 """Simulasi kantor 3D realistis (WebGL / Three.js) untuk Kantor AI Gudang.
 
-Denah 26 x 16 m: Ruang HRD, Ruang Manager Operation, Ruang Meeting, Koridor,
+Denah 26 x 16 m: Ruang HRD, Ruang Admin Control, Ruang Meeting, Koridor,
 Ruang Operation Control, Ruang Asset Management, Ruang HSE, Ruang Server, plus Area Parkir.
 Antar-ruangan dibatasi partisi kaca berpintu; agent berjalan lewat pintu.
 
@@ -143,7 +143,7 @@ camera.position.copy(HOME.p);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.t);
 controls.enableDamping = true; controls.dampingFactor = 0.08;
-controls.minDistance = 3.5; controls.maxDistance = 95;
+controls.zoomSpeed = 0.35; controls.minDistance = 6; controls.maxDistance = 95;
 controls.minPolarAngle = 0.15; controls.maxPolarAngle = 1.5;
 controls.minAzimuthAngle = -0.2; controls.maxAzimuthAngle = Math.PI / 2 + 0.2;
 controls.update();
@@ -586,9 +586,9 @@ plant(0.8, 7.3, 1); plant(8.4, 7.0, 0.9); plant(0.6, 0.9, 0.9);
 }
 
 // ---------------------------------------------------------------------
-// RUANG MANAGER OPERATION (9-17 x 0-8) + meja supervisor "Kamu"
+// RUANG ADMIN CONTROL (9-17 x 0-8) + meja supervisor "Kamu"
 // ---------------------------------------------------------------------
-SEAT.manager_ops = desk(10.2, 1.5, 2.2, 1.1, '#6d5a4e', 'code', 'manager_ops', 0); chair(SEAT.manager_ops, 0);
+SEAT.admin_control = desk(10.2, 1.5, 2.2, 1.1, '#6d5a4e', 'code', 'admin_control', 0); chair(SEAT.admin_control, 0);
 const SUP_SEAT = desk(13.4, 1.5, 1.9, 0.9, '#8a6b5a', 'dash', null, 0);
 chair(SUP_SEAT, 0);
 const boardT = paint(640, 360, (g, w, h) => {
@@ -764,14 +764,14 @@ function car(x, z, col, ry) {
   };
   [1, 13, 25, 37, -11].forEach(x => post(x, 22.5));
 }
-const ROOMS = [['RUANG HRD', 4.5, 0.4, 2.7], ['RUANG MANAGER OPERATION', 13, 0.4, 2.7], ['RUANG MEETING', 21.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['RUANG OPERATION CONTROL', 3.5, 10.4, 2.7], ['RUANG ASSET MANAGEMENT', 10.5, 10.4, 2.7], ['RUANG HSE', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7], ['AREA PARKIR', 13, 16.6, 0.3]];
+const ROOMS = [['RUANG HRD', 4.5, 0.4, 2.7], ['RUANG ADMIN CONTROL', 13, 0.4, 2.7], ['RUANG MEETING', 21.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['RUANG OPERATION CONTROL', 3.5, 10.4, 2.7], ['RUANG ASSET MANAGEMENT', 10.5, 10.4, 2.7], ['RUANG HSE', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7], ['AREA PARKIR', 13, 16.6, 0.3]];
 
 // =====================================================================
 // Karakter manusia (humanoid prosedural, PBR)
 // =====================================================================
 const LOOK = {
   hrd: { female: true, skin: '#e8b894', hair: '#2a1a14', shirt: '#e0568a', pants: '#2b2f3f', sleeve: 'short' },
-  manager_ops: { female: false, skin: '#d9a47c', hair: '#161616', shirt: '#2f6fd1', pants: '#2b3350', tie: '#b3261e', glasses: true, sleeve: 'long' },
+  admin_control: { female: false, skin: '#d9a47c', hair: '#161616', shirt: '#2f6fd1', pants: '#2b3350', tie: '#b3261e', glasses: true, sleeve: 'long' },
   asset: { female: true, skin: '#e6b48f', hair: '#2a1a14', shirt: '#1f6f8b', pants: '#2b2f3f', sleeve: 'long' },
   hse: { female: false, skin: '#c68e65', hair: '#1c1c1c', shirt: '#e8751a', pants: '#2b3350', vest: true, hat: '#ffffff', sleeve: 'long' },
   op1: { female: false, skin: '#c68e65', hair: '#1c1c1c', shirt: '#3d4b5c', pants: '#2b3350', glasses: true, sleeve: 'long' },
