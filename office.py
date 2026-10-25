@@ -98,7 +98,7 @@ canvas{display:block;outline:none}
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v8 pintu geser</span></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v9 pintu geser</span></div>
 <div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
 <div id="err"></div></div>
 <script>setTimeout(function(){if(!window.__ok){var e=document.getElementById('err');e.style.display='flex';e.textContent='Gagal memuat Three.js dari CDN (jsdelivr). Pastikan koneksi internet aktif lalu muat ulang halaman.';}},9000);</script>
@@ -372,8 +372,9 @@ function updateDoors(dt, people) {   // pintu geser otomatis: daun meluncur ke s
         if ((vx * dx + vz * dz) / (vl * q) > 0.55 && along < 1.1 && perp < 2.4) { near = true; break; }
       }
     }
-    d.o += ((near ? 1 : 0) - d.o) * Math.min(1, dt * (near ? 9 : 3));
-    d.leaf.scale.x = 1 - 0.85 * d.o; d.leaf.position.x = -d.o * d.L * 0.8; d.leaf.position.z = Math.min(1, d.o * 6) * 0.085; d.leaf.visible = d.o < 0.97;
+    d.o = near ? Math.min(1, d.o + dt * 2.4) : Math.max(0, d.o - dt * 1.1);   // gerak halus, tidak muncul/hilang tiba-tiba
+    const e = d.o * d.o * (3 - 2 * d.o);
+    d.leaf.scale.x = 1 - 0.88 * e; d.leaf.position.x = -e * d.L * 0.85; d.leaf.position.z = Math.min(1, d.o * 6) * 0.085;
   });
 }
 function part(x0, z0, x1, z1, doors, o) {
