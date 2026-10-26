@@ -1,7 +1,7 @@
 """Simulasi kantor 3D realistis (WebGL / Three.js) untuk Kantor AI Gudang.
 
 Denah 26 x 16 m: Ruang HRD, Ruang Admin Control, Ruang Meeting, Koridor,
-Ruang Operation Control, Ruang Asset Management, Ruang HSE, Ruang Server, plus Area Parkir.
+Ruang Operation Control, Ruang Asset Management, Ruang HSE, Ruang Server.
 Antar-ruangan dibatasi partisi kaca berpintu; agent berjalan lewat pintu.
 
 Keadaan agent diambil dari kartu di database (sama seperti versi isometrik):
@@ -110,7 +110,7 @@ canvas{display:block;outline:none}
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v12 loading</span></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v13 maket studio</span></div>
 <div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
 <div id="ld"><div class="ldlogo">JDC <span>Kantor AI</span></div><div class="ldspin"></div><div class="ldbar"><i></i></div>
 <div class="ldmsg"><span>Memuat mesin 3D…</span><span>Membangun ruangan & perabot…</span><span>Menyiapkan karakter…</span><span>Hampir siap…</span></div></div>
@@ -148,18 +148,21 @@ $v.appendChild(renderer.domElement);
 const ANI = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
 const scene = new THREE.Scene();
-const HORIZON = new THREE.Color('#d3e4f1');
-scene.background = HORIZON;
-scene.fog = new THREE.Fog(HORIZON, 55, 250);
+const HORIZON = new THREE.Color('#0d1320');
+scene.background = (() => {   // latar studio: gradien navy gelap, kantor tampil seperti maket
+  const c = document.createElement('canvas'); c.width = 4; c.height = 512; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 512);
+  gr.addColorStop(0, '#2a3652'); gr.addColorStop(0.55, '#141b2c'); gr.addColorStop(1, '#0a0e17'); g.fillStyle = gr; g.fillRect(0, 0, 4, 512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 520);
-const HOME = { p: new THREE.Vector3(33, 24, 37.5), t: new THREE.Vector3(13, 0.6, 11) };
+const HOME = { p: new THREE.Vector3(36, 25, 39), t: new THREE.Vector3(13, 0.2, 8.6) };
 camera.position.copy(HOME.p);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.t);
 controls.enableDamping = true; controls.dampingFactor = 0.08;
-controls.minDistance = 6; controls.maxDistance = 95;
+controls.minDistance = 6; controls.maxDistance = 70;
 // zoom roda mouse: langkah tetap kecil per "klik", tidak peduli seberapa besar delta dari mouse/trackpad
 controls.enableZoom = false;
 { let lastW = 0;
@@ -172,7 +175,7 @@ controls.enableZoom = false;
 controls.minPolarAngle = 0.15; controls.maxPolarAngle = 1.5;
 controls.minAzimuthAngle = -0.2; controls.maxAzimuthAngle = Math.PI / 2 + 0.2;
 controls.update();
-const PAN_MIN = new THREE.Vector3(-4, 0, -4), PAN_MAX = new THREE.Vector3(30, 3, 25);
+const PAN_MIN = new THREE.Vector3(-2, 0, -2), PAN_MAX = new THREE.Vector3(28, 3, 18);
 
 // =====================================================================
 // Util: tekstur kanvas, material, mesh
@@ -234,27 +237,6 @@ function ao(cx, cz, w, d, o) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), o ? AOM.clone() : AOM);
   if (o) m.material.opacity = o;
   m.rotation.x = -Math.PI / 2; m.position.set(cx, 0.012, cz); m.renderOrder = 1; S.add(m); return m;
-}
-
-// =====================================================================
-// Langit: kubah gradien + awan lembut
-// =====================================================================
-{
-  const skyDome = paint(1024, 512, (g, w, h) => {
-    const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, '#2f78d0'); gr.addColorStop(0.3, '#5fa3e6'); gr.addColorStop(0.44, '#a8d0f0'); gr.addColorStop(0.5, '#d3e4f1'); gr.addColorStop(1, '#d3e4f1');
-    g.fillStyle = gr; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 30; i++) {
-      const cx = rnd() * w, cy = 60 + rnd() * 140, sc = 0.7 + rnd() * 1.2;
-      for (let k = 0; k < 10; k++) {
-        const x = cx + (k - 4.5) * 17 * sc, y = cy + (rnd() - 0.5) * 12 * sc, r = (18 + rnd() * 24) * sc;
-        const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, 'rgba(255,255,255,.62)'); rg.addColorStop(0.6, 'rgba(255,255,255,.22)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
-        g.fillStyle = rg; g.beginPath(); g.ellipse(x, y, r * 1.5, r * 0.62, 0, 0, 6.3); g.fill();
-      }
-    }
-  });
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(400, 40, 20), new THREE.MeshBasicMaterial({ map: skyDome, side: THREE.BackSide, fog: false, toneMapped: false, depthWrite: false }));
-  dome.renderOrder = -10; scene.add(dome);
 }
 
 // =====================================================================
@@ -328,17 +310,23 @@ function zone(x0, z0, x1, z1, mat, tile) {
 }
 zone(0, 0, 9, 8, FL.wood, 4); zone(9, 0, 26, 8, FL.carpet, 2); zone(0, 8, 26, 10, FL.conc, 4);
 zone(0, 10, 7, 16, FL.carpet, 2); zone(7, 10, 14, 16, FL.conc, 4); zone(14, 10, 20, 16, FL.tile, 4);
-zone(20, 10, 26, 16, FL.raised, 4); zone(-1, 16, 27, 21.4, FL.asph, 4);
+zone(20, 10, 26, 16, FL.raised, 4);
 add(S, BX(NX + WT, 0.24, NZ + WT), M('#2a2530'), NX / 2 - WT / 2, -0.13, NZ / 2 - WT / 2, { nocast: true });
-add(S, BX(28, 0.24, 5.4), M('#2a2d31'), 13, -0.13, 18.7, { nocast: true });
-add(S, BX(28, 0.1, 0.18), M('#9a9a96'), 13, 0.05, 16.09);
+{ // alas maket: panel putih dengan bibir aksen, ditambah bayangan lembut di "lantai" studio
+  const px = -1.3, pz = -1.3, pw = NX + 2.6 + WT, pd = NZ + 2.6 + WT;
+  add(S, RB(pw, 0.5, pd, 0.06), P('#e3e6ec', { roughness: 0.35, clearcoat: 0.5, clearcoatRoughness: 0.25 }), px + pw / 2, -0.28, pz + pd / 2, { nocast: true });
+  add(S, BX(pw + 0.02, 0.05, pd + 0.02), new THREE.MeshStandardMaterial({ color: '#4f8cff', emissive: '#4f8cff', emissiveIntensity: 0.9, roughness: 0.4 }), px + pw / 2, -0.43, pz + pd / 2, { nocast: true });
+  const gt = paint(256, 256, (g, w, h) => { const r = g.createRadialGradient(128, 128, 20, 128, 128, 128); r.addColorStop(0, 'rgba(0,0,0,.55)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, w, h); }, true, [1, 1]);
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(pw * 1.9, pd * 2.1), new THREE.MeshBasicMaterial({ map: gt, transparent: true, depthWrite: false, fog: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.set(px + pw / 2, -0.7, pz + pd / 2); S.add(sh);
+}
 
 // =====================================================================
 // Dinding luar, jendela, partisi kaca
 // =====================================================================
 const WIN_Y0 = 1.0, WIN_Y1 = 2.3;
-const wm1 = M('#7d6f86', { roughness: 0.93, bumpMap: noise(14, 3), bumpScale: 0.25 });
-const wm2 = M('#9a8aa3', { roughness: 0.93, bumpMap: noise(8, 3), bumpScale: 0.25 });
+const wm1 = M('#56627a', { roughness: 0.93, bumpMap: noise(14, 3), bumpScale: 0.25 });
+const wm2 = M('#657391', { roughness: 0.93, bumpMap: noise(8, 3), bumpScale: 0.25 });
 const GLASS = P('#cfe8ff', { roughness: 0.04, transparent: true, opacity: 0.1, envMapIntensity: 1.3, depthWrite: false });
 function win(ax, a, b) {
   const L = b - a, H = WIN_Y1 - WIN_Y0, t = 0.05, fm = M('#ece8df', { roughness: 0.5 }), g = new THREE.Group();
@@ -363,7 +351,7 @@ function outerWall(axis, len, ops, mat) {
 }
 outerWall('x', NX, [[1, 3.5], [5.5, 8.5], [10, 12.5], [13.5, 16], [18, 21], [22, 25]], wm1);
 outerWall('z', NZ, [[1, 3], [6.5, 7.8], [11, 13], [14, 15.5]], wm2);
-const skirt = M('#4d4155', { roughness: 0.5 });
+const skirt = M('#2c3446', { roughness: 0.5 });
 add(S, BX(NX, 0.1, 0.025), skirt, NX / 2, 0.05, 0.0125); add(S, BX(0.025, 0.1, NZ), skirt, 0.0125, 0.05, NZ / 2);
 
 const PM = M('#ebe8e1', { roughness: 0.85 });
@@ -424,19 +412,6 @@ part(9, 0, 9, 8, [[4.6, 5.9]]); part(17, 0, 17, 8, [[4.6, 5.9]]);
 part(7, 10, 7, 16, [[12.8, 14.1]]); part(14, 10, 14, 16, [[12.5, 13.8]]);
 part(20, 10, 20, 16, [[11.2, 12.5], [14.0, 15.3]]); 
 
-// pemandangan di luar jendela
-// kota di kejauhan (kotak 3D berkabut) untuk pemandangan dari jendela
-{
-  const winT = paint(128, 256, (g, w, h) => { g.fillStyle = '#b4c5d6'; g.fillRect(0, 0, w, h); for (let y = 8; y < h; y += 16) for (let x = 6; x < w; x += 14) { g.fillStyle = rnd() < 0.25 ? '#eef5fb' : '#8ea5bb'; g.fillRect(x, y, 8, 9); } }, true, [1, 1]);
-  const cols = ['#b6c6d6', '#a9bccd', '#c3cfdb'];
-  const bld = (x, z, w, d, h, i) => {
-    const tx = winT.clone(); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(Math.max(1, Math.round(w / 6)), Math.max(1, Math.round(h / 10))); tx.needsUpdate = true;
-    add(S, BX(w, h, d), new THREE.MeshStandardMaterial({ color: cols[i % 3], map: tx, roughness: 0.9 }), x, h / 2 - 0.12, z, { nocast: true, norecv: true });
-  };
-  let bi = 0;
-  for (let x = -110; x < 150; x += 16 + rnd() * 12) bld(x, -95 - rnd() * 45, 10 + rnd() * 10, 10 + rnd() * 8, 12 + rnd() * 34, bi++);
-  for (let z = -90; z < 130; z += 16 + rnd() * 12) bld(-95 - rnd() * 45, z, 10 + rnd() * 8, 10 + rnd() * 10, 12 + rnd() * 34, bi++);
-}
 
 // =====================================================================
 // Layar (kanvas hidup), monitor, meja, kursi
@@ -774,67 +749,7 @@ ob(20.45, 10.3, 22.1, 11.3); ob(23.5, 10.3, 25.15, 11.3);
 ob(20.5, 14.5, 24.9, 15.5); ao(22.7, 15.0, 5.2, 1.8, 0.5); ao(22.8, 10.8, 5.6, 1.8, 0.5);
 add(S, RB(1.0, 1.9, 0.7, 0.03), M('#dfe3e8', { roughness: 0.35 }), 25.3, 0.95, 13.0); ob(24.75, 12.6, 25.9, 13.4); // unit pendingin
 
-// =====================================================================
-// AREA PARKIR (di depan gedung)
-// =====================================================================
-function car(x, z, col, ry) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry || 0; S.add(g);
-  const body = P(col, { roughness: 0.25, metalness: 0.5, clearcoat: 1, clearcoatRoughness: 0.05 }), gl = P('#16202c', { roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.88 });
-  add(g, RB(1.8, 0.5, 4.3, 0.18), body, 0, 0.55, 0); add(g, RB(1.6, 0.5, 2.3, 0.2), gl, 0, 1.05, -0.1); add(g, RB(1.58, 0.06, 2.0, 0.05), body, 0, 1.32, -0.1);
-  [[-0.82, 1.35], [0.82, 1.35], [-0.82, -1.35], [0.82, -1.35]].forEach(w => add(g, new THREE.CylinderGeometry(0.34, 0.34, 0.24, 18), BLACK, w[0], 0.34, w[1], { r: [0, 0, Math.PI / 2] }));
-  [-0.6, 0.6].forEach(q => { add(g, BX(0.4, 0.12, 0.05), new THREE.MeshStandardMaterial({ color: '#fff', emissive: '#ffffdd', emissiveIntensity: 2 }), q, 0.62, 2.16); add(g, BX(0.4, 0.1, 0.05), new THREE.MeshStandardMaterial({ color: '#900', emissive: '#c00', emissiveIntensity: 1 }), q, 0.62, -2.16); });
-  ao(x, z, 2.6, 5.0, 0.55);
-}
-{
-  const ln = M('#e8e8e0', { roughness: 0.7 });
-  for (let k = 0; k < 7; k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 3.8), ln); m.rotation.x = -Math.PI / 2; m.position.set(2 + k * 4, 0.011, 18.6); S.add(m); }
-  car(4, 18.7, '#b22b2b', Math.PI); car(12, 18.7, '#e8e8ea', Math.PI); car(20, 18.7, '#1f4e8f', Math.PI);
-  [[24.6, 18.6], [26.2, 19.8]].forEach(p => {
-    add(S, new THREE.CylinderGeometry(0.1, 0.14, 1.6, 10), M('#6b4a2f'), p[0], 0.8, p[1]);
-    [[0, 2.0, 0, 0.9], [0.4, 2.5, 0.2, 0.7], [-0.35, 2.4, -0.2, 0.65]].forEach(f => add(S, new THREE.SphereGeometry(f[3], 14, 10), M('#2e6b3a', { roughness: 0.8, bumpMap: FAB, bumpScale: 1 }), p[0] + f[0], f[1], p[1] + f[2]));
-  });
-}
-// =====================================================================
-// LINGKUNGAN LUAR: halaman rumput, trotoar, jalan, pohon, lampu jalan
-// =====================================================================
-{
-  const grassT = paint(512, 512, (g, w, h) => {
-    g.fillStyle = '#5c8f4a'; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 90; i++) { g.fillStyle = 'hsla(' + (92 + rnd() * 26) + ',' + (32 + rnd() * 20) + '%,' + (30 + rnd() * 16) + '%,' + (0.12 + rnd() * 0.14) + ')'; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 14 + rnd() * 46, 8 + rnd() * 26, rnd() * 3, 0, 6.3); g.fill(); }
-    for (let i = 0; i < 9000; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(20,50,15,.22)' : 'rgba(150,200,90,.2)'; g.fillRect(rnd() * w, rnd() * h, 1.5, 2.5); }
-  }, true, [1, 1]);
-  const walkT = paint(256, 256, (g, w, h) => { g.fillStyle = '#c9c6bd'; g.fillRect(0, 0, w, h); speck(g, w, h, 5000, 0.06); grid(g, w, h, 2, 'rgba(60,58,52,.38)', 2); }, true, [1, 1]);
-  const roadT = paint(256, 256, (g, w, h) => { g.fillStyle = '#2f3237'; g.fillRect(0, 0, w, h); speck(g, w, h, 9000, 0.08); }, true, [1, 1]);
-  const flat = (x0, z0, x1, z1, mat, tile, y) => {
-    const w = x1 - x0, d = z1 - z0, g = new THREE.PlaneGeometry(w, d), uv = g.attributes.uv;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / tile, uv.getY(i) * d / tile);
-    const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); m.receiveShadow = true; S.add(m);
-  };
-  flat(-390, -390, 410, 410, M('#ffffff', { map: grassT, roughness: 1, bumpMap: BN, bumpScale: 0.5 }), 8, -0.12);
-  flat(-14, 21.4, 40, 23.6, M('#ffffff', { map: walkT, roughness: 0.85 }), 2, -0.105);
-  flat(-80, 26.2, 110, 34, M('#ffffff', { map: roadT, roughness: 0.95 }), 4, -0.105);
-  const paintM = M('#e9e3c0', { roughness: 0.7 });
-  for (let x = -76; x < 108; x += 4.5) { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.16), paintM); m.rotation.x = -Math.PI / 2; m.position.set(x, -0.1, 30.1); S.add(m); }
-  [26.6, 33.6].forEach(z => { const m = new THREE.Mesh(new THREE.PlaneGeometry(190, 0.12), M('#e8e8e0', { roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.position.set(15, -0.1, z); S.add(m); });
-  add(S, BX(28.4, 0.12, 0.16), M('#b9b6ae', { roughness: 0.8 }), 13, -0.05, 21.48);
-  add(S, RB(52, 0.74, 0.6, 0.06), M('#2f6b35', { roughness: 0.92, bumpMap: FAB, bumpScale: 1.6 }), 13, 0.25, 24.3, {});
-  const TR = M('#6b4a2f', { roughness: 0.9, bumpMap: FAB, bumpScale: 1 });
-  const LEAF = ['#2e6b3a', '#3b7d3f', '#2a5e34'].map(c => M(c, { roughness: 0.85, bumpMap: FAB, bumpScale: 1.2 }));
-  const tree = (x, z, sc, k) => {
-    const g = new THREE.Group(); g.position.set(x, -0.12, z); g.scale.setScalar(sc); S.add(g);
-    add(g, new THREE.CylinderGeometry(0.12, 0.2, 2.2, 10), TR, 0, 1.1, 0);
-    [[0, 2.9, 0, 1.25], [0.7, 2.5, 0.3, 0.95], [-0.65, 2.6, -0.25, 1.0], [0.1, 3.7, 0.1, 0.9], [-0.3, 3.3, 0.6, 0.8]].forEach((f, i) => add(g, new THREE.IcosahedronGeometry(f[3], 2), LEAF[(k + i) % 3], f[0], f[1], f[2]));
-  };
-  [[-3, -5, 1.0], [6, -7, 1.15], [16, -6, 0.95], [26, -7, 1.1], [35, -5, 1.0], [-6, 3, 1.05], [-8, 11, 1.2], [-6, 18, 1.0],
-   [31.5, 4, 1.1], [33.5, 12, 1.0], [32, 19, 1.15], [-6.5, 22.2, 0.95], [33, 22.4, 1.0], [44, 22.4, 1.1], [-18, 22.4, 1.05]].forEach((t, i) => tree(t[0], t[1], t[2], i));
-  const post = (x, z) => {
-    add(S, new THREE.CylinderGeometry(0.05, 0.07, 4.2, 10), STEEL, x, 1.98, z);
-    add(S, RB(0.95, 0.12, 0.3, 0.04), BLACK, x + 0.42, 4.1, z);
-    add(S, BX(0.7, 0.02, 0.22), new THREE.MeshStandardMaterial({ color: '#fff', emissive: '#fff2c9', emissiveIntensity: 1.6 }), x + 0.42, 4.03, z, { nocast: true });
-  };
-  [1, 13, 25, 37, -11].forEach(x => post(x, 22.5));
-}
-const ROOMS = [['RUANG HRD', 4.5, 0.4, 2.7], ['RUANG ADMIN CONTROL', 13, 0.4, 2.7], ['RUANG MEETING', 21.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['RUANG OPERATION CONTROL', 3.5, 10.4, 2.7], ['RUANG ASSET MANAGEMENT', 10.5, 10.4, 2.7], ['RUANG HSE', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7], ['AREA PARKIR', 13, 16.6, 0.3]];
+const ROOMS = [['RUANG HRD', 4.5, 0.4, 2.7], ['RUANG ADMIN CONTROL', 13, 0.4, 2.7], ['RUANG MEETING', 21.5, 0.4, 2.7], ['KORIDOR', 3, 8.2, 2.7], ['RUANG OPERATION CONTROL', 3.5, 10.4, 2.7], ['RUANG ASSET MANAGEMENT', 10.5, 10.4, 2.7], ['RUANG HSE', 17, 10.4, 2.7], ['RUANG SERVER', 23, 10.4, 2.7]];
 
 // =====================================================================
 // Karakter manusia (humanoid prosedural, PBR)

@@ -560,7 +560,7 @@ with tab_kantor:
             <div style="display:flex;gap:6px;flex-wrap:wrap">
             <span class="tag">Ruang HRD</span><span class="tag">Ruang Admin Control</span><span class="tag">Ruang Operation Control</span>
             <span class="tag">Ruang Asset Management</span><span class="tag">Ruang HSE</span><span class="tag">Ruang Server</span>
-            <span class="tag">Ruang Meeting</span><span class="tag">Area Parkir</span>
+            <span class="tag">Ruang Meeting</span>
             </div>
             """
         )
