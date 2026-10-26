@@ -87,8 +87,8 @@ canvas{display:block;outline:none}
 .bb{position:relative;max-width:230px;white-space:normal;background:#fff;color:#1b1f27;font:12px/1.35 system-ui,sans-serif;padding:6px 9px;border-radius:9px;border:2px solid #3498db;box-shadow:0 4px 14px rgba(0,0,0,.35);text-align:left}
 .bb:after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-5px;border:5px solid transparent;border-top-color:inherit}
 .rl{z-index:1;position:absolute;left:0;top:0;will-change:transform;font:700 9px system-ui,sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.8);background:rgba(15,17,23,.5);padding:2px 7px;border-radius:5px;white-space:nowrap}
-.ttl{position:absolute;left:14px;top:10px;color:#e8e2d6;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
-.ttl b{display:block;font-size:13px}.ttl span{font-size:11px;color:#9aa3b2}
+.ttl{position:absolute;left:14px;top:10px;color:#1c2740;text-shadow:0 1px 3px rgba(255,255,255,.7);pointer-events:none}
+.ttl b{display:block;font-size:13px}.ttl span{font-size:11px;color:#46556f}
 .hud{position:absolute;right:10px;top:10px;display:flex;gap:6px;align-items:center}
 .hud button{background:rgba(15,17,23,.78);color:#e8e2d6;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:5px 10px;font:600 11px system-ui,sans-serif;cursor:pointer}
 .hud button:hover{background:rgba(45,52,70,.95)}
@@ -110,8 +110,8 @@ canvas{display:block;outline:none}
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v13 maket studio</span></div>
-<div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v14 terang</span></div>
+<div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.15" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
 <div id="ld"><div class="ldlogo">JDC <span>Kantor AI</span></div><div class="ldspin"></div><div class="ldbar"><i></i></div>
 <div class="ldmsg"><span>Memuat mesin 3D…</span><span>Membangun ruangan & perabot…</span><span>Menyiapkan karakter…</span><span>Hampir siap…</span></div></div>
 <div id="err"></div></div>
@@ -143,15 +143,15 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;   // bayangan di-update tiap 2 frame (hemat GPU)
 let shF = 0;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.15;
 $v.appendChild(renderer.domElement);
 const ANI = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
 const scene = new THREE.Scene();
-const HORIZON = new THREE.Color('#0d1320');
+const HORIZON = new THREE.Color('#dfe7f3');
 scene.background = (() => {   // latar studio: gradien navy gelap, kantor tampil seperti maket
   const c = document.createElement('canvas'); c.width = 4; c.height = 512; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 512);
-  gr.addColorStop(0, '#2a3652'); gr.addColorStop(0.55, '#141b2c'); gr.addColorStop(1, '#0a0e17'); g.fillStyle = gr; g.fillRect(0, 0, 4, 512);
+  gr.addColorStop(0, '#e6edf8'); gr.addColorStop(0.55, '#b9c8e0'); gr.addColorStop(1, '#8fa3c4'); g.fillStyle = gr; g.fillRect(0, 0, 4, 512);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 })();
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
@@ -242,7 +242,7 @@ function ao(cx, cz, w, d, o) {
 // =====================================================================
 // Pencahayaan
 // =====================================================================
-scene.add(new THREE.HemisphereLight(0xdfeaff, 0x9a8670, 0.55));
+scene.add(new THREE.HemisphereLight(0xeaf2ff, 0xb8a98f, 0.8), new THREE.AmbientLight(0xffffff, 0.3));
 const sun = new THREE.DirectionalLight(0xfff0d8, 3.2);
 sun.position.set(4, 14, -4); sun.target.position.set(13, 0, 8);
 sun.castShadow = true;
@@ -250,7 +250,7 @@ sun.castShadow = true;
 sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 sun.shadow.mapSize.set(3072, 3072);
 scene.add(sun, sun.target);
-const fill = new THREE.DirectionalLight(0xcfe0ff, 0.7); fill.position.set(30, 14, 30); scene.add(fill);
+const fill = new THREE.DirectionalLight(0xdbe8ff, 1.0); fill.position.set(30, 14, 30); scene.add(fill);
 const LIGHTS = [];
 [[4.5, 2.7, 4], [13, 2.7, 4], [21.5, 2.7, 4], [13, 2.7, 9], [3.5, 2.7, 13], [10.5, 2.7, 13], [17, 2.7, 13]].forEach(p => {
   const l = new THREE.PointLight(0xffe3bd, 9, 12, 2); l.position.set(p[0], p[1], p[2]); scene.add(l); LIGHTS.push(l);
@@ -283,7 +283,7 @@ const woodT = paint(1024, 1024, (g, w, h) => {
     g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(0, r * rh, w, 2);
   }
 }, true, [1, 1]);
-const carpetT = paint(512, 512, (g, w, h) => { g.fillStyle = '#4b566a'; g.fillRect(0, 0, w, h); speck(g, w, h, 16000, 0.07); grid(g, w, h, 4, 'rgba(0,0,0,.28)', 2); }, true, [1, 1]);
+const carpetT = paint(512, 512, (g, w, h) => { g.fillStyle = '#69778f'; g.fillRect(0, 0, w, h); speck(g, w, h, 16000, 0.07); grid(g, w, h, 4, 'rgba(0,0,0,.28)', 2); }, true, [1, 1]);
 const marbleT = paint(512, 512, (g, w, h) => {
   g.fillStyle = '#ebe8e2'; g.fillRect(0, 0, w, h);
   for (let i = 0; i < 30; i++) { g.strokeStyle = 'rgba(120,115,110,' + (0.05 + rnd() * 0.1) + ')'; g.lineWidth = 1 + rnd() * 2; g.beginPath(); let x = rnd() * w, y = rnd() * h; g.moveTo(x, y); for (let k = 0; k < 5; k++) { x += rnd() * 120 - 40; y += rnd() * 120 - 40; g.lineTo(x, y); } g.stroke(); }
@@ -315,8 +315,8 @@ add(S, BX(NX + WT, 0.24, NZ + WT), M('#2a2530'), NX / 2 - WT / 2, -0.13, NZ / 2 
 { // alas maket: panel putih dengan bibir aksen, ditambah bayangan lembut di "lantai" studio
   const px = -1.3, pz = -1.3, pw = NX + 2.6 + WT, pd = NZ + 2.6 + WT;
   add(S, RB(pw, 0.5, pd, 0.06), P('#e3e6ec', { roughness: 0.35, clearcoat: 0.5, clearcoatRoughness: 0.25 }), px + pw / 2, -0.28, pz + pd / 2, { nocast: true });
-  add(S, BX(pw + 0.02, 0.05, pd + 0.02), new THREE.MeshStandardMaterial({ color: '#4f8cff', emissive: '#4f8cff', emissiveIntensity: 0.9, roughness: 0.4 }), px + pw / 2, -0.43, pz + pd / 2, { nocast: true });
-  const gt = paint(256, 256, (g, w, h) => { const r = g.createRadialGradient(128, 128, 20, 128, 128, 128); r.addColorStop(0, 'rgba(0,0,0,.55)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, w, h); }, true, [1, 1]);
+  add(S, BX(pw + 0.02, 0.05, pd + 0.02), new THREE.MeshStandardMaterial({ color: '#4f8cff', emissive: '#4f8cff', emissiveIntensity: 0.6, roughness: 0.4 }), px + pw / 2, -0.43, pz + pd / 2, { nocast: true });
+  const gt = paint(256, 256, (g, w, h) => { const r = g.createRadialGradient(128, 128, 20, 128, 128, 128); r.addColorStop(0, 'rgba(40,55,85,.32)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, w, h); }, true, [1, 1]);
   const sh = new THREE.Mesh(new THREE.PlaneGeometry(pw * 1.9, pd * 2.1), new THREE.MeshBasicMaterial({ map: gt, transparent: true, depthWrite: false, fog: false }));
   sh.rotation.x = -Math.PI / 2; sh.position.set(px + pw / 2, -0.7, pz + pd / 2); S.add(sh);
 }
@@ -325,8 +325,8 @@ add(S, BX(NX + WT, 0.24, NZ + WT), M('#2a2530'), NX / 2 - WT / 2, -0.13, NZ / 2 
 // Dinding luar, jendela, partisi kaca
 // =====================================================================
 const WIN_Y0 = 1.0, WIN_Y1 = 2.3;
-const wm1 = M('#56627a', { roughness: 0.93, bumpMap: noise(14, 3), bumpScale: 0.25 });
-const wm2 = M('#657391', { roughness: 0.93, bumpMap: noise(8, 3), bumpScale: 0.25 });
+const wm1 = M('#6c7c9c', { roughness: 0.93, bumpMap: noise(14, 3), bumpScale: 0.25 });
+const wm2 = M('#7d8caa', { roughness: 0.93, bumpMap: noise(8, 3), bumpScale: 0.25 });
 const GLASS = P('#cfe8ff', { roughness: 0.04, transparent: true, opacity: 0.1, envMapIntensity: 1.3, depthWrite: false });
 function win(ax, a, b) {
   const L = b - a, H = WIN_Y1 - WIN_Y0, t = 0.05, fm = M('#ece8df', { roughness: 0.5 }), g = new THREE.Group();
@@ -351,7 +351,7 @@ function outerWall(axis, len, ops, mat) {
 }
 outerWall('x', NX, [[1, 3.5], [5.5, 8.5], [10, 12.5], [13.5, 16], [18, 21], [22, 25]], wm1);
 outerWall('z', NZ, [[1, 3], [6.5, 7.8], [11, 13], [14, 15.5]], wm2);
-const skirt = M('#2c3446', { roughness: 0.5 });
+const skirt = M('#3f4a63', { roughness: 0.5 });
 add(S, BX(NX, 0.1, 0.025), skirt, NX / 2, 0.05, 0.0125); add(S, BX(0.025, 0.1, NZ), skirt, 0.0125, 0.05, NZ / 2);
 
 const PM = M('#ebe8e1', { roughness: 0.85 });
