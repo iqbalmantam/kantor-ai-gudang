@@ -93,15 +93,29 @@ canvas{display:block;outline:none}
 .hud button{background:rgba(15,17,23,.78);color:#e8e2d6;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:5px 10px;font:600 11px system-ui,sans-serif;cursor:pointer}
 .hud button:hover{background:rgba(45,52,70,.95)}
 .hud input{width:70px;accent-color:#9aa3b2}
+#ld{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(ellipse at 50% 40%,#1a2236 0%,#0b0f18 75%);color:#e8e2d6;font-family:system-ui,sans-serif;transition:opacity .7s ease}
+#ld.off{opacity:0;pointer-events:none}
+.ldlogo{font-weight:800;font-size:15px;letter-spacing:.04em}.ldlogo span{color:#7cb8ff}
+.ldspin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.1);border-top-color:#7cb8ff;border-right-color:#7c5cff;animation:ldspin 1s linear infinite}
+.ldbar{width:230px;height:4px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.ldbar i{display:block;width:40%;height:100%;border-radius:3px;background:linear-gradient(90deg,#4f8cff,#7c5cff);animation:ldbar 1.4s ease-in-out infinite}
+.ldmsg{position:relative;height:18px;width:260px;text-align:center;font-size:12px;color:#9aa3b2}
+.ldmsg span{position:absolute;left:0;right:0;opacity:0;animation:ldmsg 10s linear infinite}
+.ldmsg span:nth-child(2){animation-delay:2.5s}.ldmsg span:nth-child(3){animation-delay:5s}.ldmsg span:nth-child(4){animation-delay:7.5s}
+@keyframes ldspin{to{transform:rotate(360deg)}}
+@keyframes ldbar{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
+@keyframes ldmsg{0%{opacity:0}4%{opacity:1}22%{opacity:1}26%{opacity:0}100%{opacity:0}}
 #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#e8e2d6;font:13px system-ui;text-align:center;padding:20px}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="w"><div id="v"></div><div id="lab"></div>
-<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v11 grafis ringan</span></div>
+<div class="ttl"><b>JDC Distribution Center</b><span>Kantor AI · Cikarang · v12 loading</span></div>
 <div class="hud"><span style="font-size:11px;color:#9aa3b2">☀</span><input id="ex" type="range" min=".5" max="2" step=".05" value="1.1" title="Kecerahan"><button id="b1">⟲ Kamera</button><button id="b2">Kualitas: Auto</button></div>
+<div id="ld"><div class="ldlogo">JDC <span>Kantor AI</span></div><div class="ldspin"></div><div class="ldbar"><i></i></div>
+<div class="ldmsg"><span>Memuat mesin 3D…</span><span>Membangun ruangan & perabot…</span><span>Menyiapkan karakter…</span><span>Hampir siap…</span></div></div>
 <div id="err"></div></div>
-<script>setTimeout(function(){if(!window.__ok){var e=document.getElementById('err');e.style.display='flex';e.textContent='Gagal memuat Three.js dari CDN (jsdelivr). Pastikan koneksi internet aktif lalu muat ulang halaman.';}},9000);</script>
+<script>setTimeout(function(){if(!window.__ok){var e=document.getElementById('err');document.getElementById('ld').style.display='none';e.style.display='flex';e.textContent='Gagal memuat Three.js dari CDN (jsdelivr). Pastikan koneksi internet aktif lalu muat ulang halaman.';}},30000);</script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -1201,6 +1215,7 @@ function frame(now) {
   if (now - clkT0 > 1000) { clkT0 = now; drawClock(); }
   renderer.render(scene, camera);
   labels(W0, H0);
+  if (warm === 2) { const ld = document.getElementById('ld'); ld.classList.add('off'); setTimeout(() => ld.remove(), 900); }
   if (++warm > 30) {   // penyesuaian kualitas otomatis
     ema += (raw - ema) * 0.05; since += raw;
     if (qm === 'auto' && since > 2500) { since = 0; if (ema > 27 && idx < STEPS.length - 1) { idx++; applyQ(); } }
